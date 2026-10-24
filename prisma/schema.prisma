@@ -10,76 +10,74 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// المناطق الإدارية في المملكة العربية السعودية
-model Region {
+// المواقع المراقبة (المنشآت/المبانئ)
+model Site {
   id        String   @id @default(cuid())
-  name      String   // اسم المنطقة
-  code      String   @unique // الرمز
+  name      String
+  nameEn    String
+  city      String
+  cityEn    String
+  type      String   // صناعي / تجزئة / مدينة ذكية / رعاية صحية
+  typeEn    String
   lat       Float
   lng       Float
-  roads     RoadSegment[]
+  cameras   Camera[]
+  alerts    Alert[]
   createdAt DateTime @default(now())
 }
 
-// المقاطع الطرقية
-model RoadSegment {
-  id              String   @id @default(cuid())
-  name            String   // اسم الطريق
-  highway         String   // تصنيف الطريق (سريع / إقليمي / ثانوي)
-  regionId        String
-  region          Region   @relation(fields: [regionId], references: [id])
-  length          Float    // الطول بالكيلومتر
-  qualityScore    Float    // درجة الجودة 0-100
-  status          String   // ممتاز / جيد / متوسط / رديء
-  surfaceType     String   // نوع الرصف
-  aadt            Int      // متوسط حركة المرور اليومية
-  lastInspection  DateTime?
-  lat             Float
-  lng             Float
-  issues          Issue[]
-  inspections     Inspection[]
-  sensors         Sensor[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+// الكاميرات
+model Camera {
+  id          String   @id @default(cuid())
+  name        String
+  nameEn      String
+  siteId      String
+  site        Site     @relation(fields: [siteId], references: [id])
+  status      String   // online / offline / maintenance
+  resolution  String   // 1080p / 4K / 720p
+  fps         Int
+  model       String   // النموذج النشط
+  modelEn     String
+  zone        String   // المنطقة داخل الموقع
+  zoneEn      String
+  events24h   Int      // عدد أحداث آخر 24 ساعة
+  lastEventAt DateTime?
+  alerts      Alert[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
-// المشاكل والبلاغات
-model Issue {
-  id            String   @id @default(cuid())
-  roadSegmentId String
-  roadSegment   RoadSegment @relation(fields: [roadSegmentId], references: [id])
-  type          String   // نوع العيب: حفر / تشققات / هبوط / تصدعات
-  severity      String   // الخطورة: منخفضة / متوسطة / عالية / حرجة
-  description   String
-  status        String   // جديد / قيد المعالجة / تم الحل
-  reportedBy    String   // المُبلّغ
-  lat           Float?
-  lng           Float?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+// التنبيهات الأمنية
+model Alert {
+  id          String   @id @default(cuid())
+  cameraId    String
+  camera      Camera   @relation(fields: [cameraId], references: [id])
+  siteId      String
+  site        Site     @relation(fields: [siteId], references: [id])
+  type        String   // intrusion/crowd/suspicious/loitering/fight/fall/face/perimeter
+  typeEn      String
+  severity    String   // critical/high/medium/low
+  status      String   // active/acknowledged/resolved
+  description String
+  descriptionEn String
+  confidence  Int      // 0-100
+  thumbnail   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
-// الفحوصات الميدانية
-model Inspection {
-  id            String   @id @default(cuid())
-  roadSegmentId String
-  roadSegment   RoadSegment @relation(fields: [roadSegmentId], references: [id])
-  inspector     String   // اسم المفتش
-  score         Float    // درجة الفحص
-  notes         String
-  date          DateTime @default(now())
-  createdAt     DateTime @default(now())
-}
-
-// المستشعرات الذكية
-model Sensor {
-  id            String   @id @default(cuid())
-  roadSegmentId String
-  roadSegment   RoadSegment @relation(fields: [roadSegmentId], references: [id])
-  type          String   // نوع المستشعر: اهتزاز / حرارة / رطوبة / مرور
-  status        String   // نشط / معطل / صيانة
-  lastReading   String
-  battery       Int      // نسبة البطارية
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+// خطوط إنتاج الرؤية
+model Pipeline {
+  id          String   @id @default(cuid())
+  name        String
+  nameEn      String
+  description String
+  descriptionEn String
+  stages      String   // مراحل الخط مفصولة بـ |
+  stagesEn    String
+  active      Boolean  @default(true)
+  throughput  Int      // إطار/ث
+  latency     Int      // مللي ثانية
+  siteCount   Int
+  createdAt   DateTime @default(now())
 }

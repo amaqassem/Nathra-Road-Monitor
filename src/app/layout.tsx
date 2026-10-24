@@ -3,6 +3,7 @@ import { Cairo, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
+import { I18nProvider } from "@/components/nathra/lib/i18n";
 
 const cairo = Cairo({
   variable: "--font-cairo",
@@ -16,18 +17,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "طريق | منصة مراقبة جودة الطرق بالمملكة العربية السعودية",
+  title: "نظرة | منصة الأمان الذكي بالرؤية الحاسوبية",
   description:
-    "منصة وطنية ذكية لمراقبة جودة الطرق ورصفتها في المملكة العربية السعودية — تحليل لحظي، بلاغات المواطنين، فحوصات ميدانية، وذكاء اصطناعي.",
-  keywords: [
-    "جودة الطرق",
-    "السعودية",
-    "مراقبة الطرق",
-    "صيانة الطرق",
-    "الرصف",
-    "المملكة العربية السعودية",
-  ],
-  authors: [{ name: "منصة طريق" }],
+    "نظرة — منصة الأمان الذكية التي تحدث ثورة في المراقبة بتحليل الكاميرات اللحظي والذكاء الاصطناعي. كشف التسلل، إدارة الحشود، المصادقة بملامح الوجه، والامتثال لـ PDPL.",
+  keywords: ["نظرة", "الأمان الذكي", "الرؤية الحاسوبية", "كاميرات المراقبة", "الذكاء الاصطناعي", "PDPL"],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
@@ -45,12 +38,14 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster />
+          <I18nProvider>
+            {children}
+            <Toaster />
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

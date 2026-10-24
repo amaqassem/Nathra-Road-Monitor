@@ -7,10 +7,7 @@ export async function POST() {
     return NextResponse.json(result);
   } catch (error) {
     console.error("Seed error:", error);
-    return NextResponse.json(
-      { error: "فشل في تهيئة البيانات" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Seed failed" }, { status: 500 });
   }
 }
 
@@ -20,9 +17,6 @@ export async function GET() {
     return NextResponse.json(result);
   } catch (error) {
     console.error("Seed error:", error);
-    return NextResponse.json(
-      { error: "فشل في تهيئة البيانات" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Seed failed" }, { status: 500 });
   }
 }

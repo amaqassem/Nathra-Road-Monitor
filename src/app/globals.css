@@ -45,77 +45,75 @@
 
 :root {
   --radius: 0.75rem;
-  /* خلفية رملية دافئة */
-  --background: oklch(0.985 0.006 85);
-  --foreground: oklch(0.22 0.02 60);
+  /* أبيض مائل للبرود */
+  --background: oklch(0.985 0.004 230);
+  --foreground: oklch(0.21 0.02 240);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 60);
+  --card-foreground: oklch(0.21 0.02 240);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 60);
-  /* الأخضر السعودي - زمردي عميق */
-  --primary: oklch(0.52 0.13 152);
-  --primary-foreground: oklch(0.99 0.01 150);
-  /* رملي/ذهبي فاتح */
-  --secondary: oklch(0.94 0.02 80);
-  --secondary-foreground: oklch(0.3 0.03 75);
-  --muted: oklch(0.95 0.01 85);
-  --muted-foreground: oklch(0.5 0.02 70);
-  /* ذهبي/كهرماني */
-  --accent: oklch(0.9 0.05 80);
-  --accent-foreground: oklch(0.35 0.06 70);
+  --popover-foreground: oklch(0.21 0.02 240);
+  /* سماوي/سيان عميق */
+  --primary: oklch(0.55 0.14 210);
+  --primary-foreground: oklch(0.99 0.005 210);
+  --secondary: oklch(0.95 0.01 230);
+  --secondary-foreground: oklch(0.3 0.02 240);
+  --muted: oklch(0.96 0.006 230);
+  --muted-foreground: oklch(0.5 0.015 235);
+  --accent: oklch(0.93 0.02 210);
+  --accent-foreground: oklch(0.35 0.05 215);
   --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.9 0.01 80);
-  --input: oklch(0.92 0.01 80);
-  --ring: oklch(0.52 0.13 152);
-  /* لوحة الرسوم: أخضر، ذهبي، فيروزي، كهرماني، وردي */
-  --chart-1: oklch(0.6 0.14 152);
-  --chart-2: oklch(0.75 0.14 75);
-  --chart-3: oklch(0.62 0.12 200);
-  --chart-4: oklch(0.78 0.16 55);
-  --chart-5: oklch(0.65 0.2 25);
-  --sidebar: oklch(0.99 0.005 85);
-  --sidebar-foreground: oklch(0.22 0.02 60);
-  --sidebar-primary: oklch(0.52 0.13 152);
-  --sidebar-primary-foreground: oklch(0.99 0.01 150);
-  --sidebar-accent: oklch(0.94 0.02 80);
-  --sidebar-accent-foreground: oklch(0.3 0.03 75);
-  --sidebar-border: oklch(0.9 0.01 80);
-  --sidebar-ring: oklch(0.52 0.13 152);
+  --border: oklch(0.9 0.008 230);
+  --input: oklch(0.92 0.008 230);
+  --ring: oklch(0.55 0.14 210);
+  /* لوحة الرسوم: سيان، أزرق، بنفسجي، كهرماني، أحمر */
+  --chart-1: oklch(0.6 0.14 210);
+  --chart-2: oklch(0.55 0.13 260);
+  --chart-3: oklch(0.62 0.18 290);
+  --chart-4: oklch(0.78 0.14 75);
+  --chart-5: oklch(0.62 0.22 25);
+  --sidebar: oklch(0.99 0.004 230);
+  --sidebar-foreground: oklch(0.21 0.02 240);
+  --sidebar-primary: oklch(0.55 0.14 210);
+  --sidebar-primary-foreground: oklch(0.99 0.005 210);
+  --sidebar-accent: oklch(0.95 0.01 230);
+  --sidebar-accent-foreground: oklch(0.3 0.02 240);
+  --sidebar-border: oklch(0.9 0.008 230);
+  --sidebar-ring: oklch(0.55 0.14 210);
 }
 
 .dark {
-  /* أسفلت داكن */
-  --background: oklch(0.16 0.008 60);
-  --foreground: oklch(0.97 0.005 85);
-  --card: oklch(0.21 0.01 60);
-  --card-foreground: oklch(0.97 0.005 85);
-  --popover: oklch(0.21 0.01 60);
-  --popover-foreground: oklch(0.97 0.005 85);
-  --primary: oklch(0.68 0.15 152);
-  --primary-foreground: oklch(0.16 0.02 60);
-  --secondary: oklch(0.27 0.01 60);
-  --secondary-foreground: oklch(0.97 0.005 85);
-  --muted: oklch(0.27 0.01 60);
-  --muted-foreground: oklch(0.7 0.01 80);
-  --accent: oklch(0.3 0.02 75);
-  --accent-foreground: oklch(0.95 0.03 80);
+  /* سلايت/كحلي عميق — مركز قيادة */
+  --background: oklch(0.17 0.015 245);
+  --foreground: oklch(0.97 0.005 220);
+  --card: oklch(0.22 0.018 245);
+  --card-foreground: oklch(0.97 0.005 220);
+  --popover: oklch(0.22 0.018 245);
+  --popover-foreground: oklch(0.97 0.005 220);
+  --primary: oklch(0.72 0.14 200);
+  --primary-foreground: oklch(0.16 0.02 245);
+  --secondary: oklch(0.28 0.015 245);
+  --secondary-foreground: oklch(0.97 0.005 220);
+  --muted: oklch(0.27 0.015 245);
+  --muted-foreground: oklch(0.7 0.012 230);
+  --accent: oklch(0.3 0.02 220);
+  --accent-foreground: oklch(0.95 0.02 210);
   --destructive: oklch(0.7 0.19 22);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.68 0.15 152);
-  --chart-1: oklch(0.7 0.15 152);
-  --chart-2: oklch(0.78 0.14 75);
-  --chart-3: oklch(0.68 0.12 200);
-  --chart-4: oklch(0.8 0.16 55);
+  --ring: oklch(0.72 0.14 200);
+  --chart-1: oklch(0.72 0.14 200);
+  --chart-2: oklch(0.68 0.13 260);
+  --chart-3: oklch(0.72 0.18 290);
+  --chart-4: oklch(0.8 0.14 75);
   --chart-5: oklch(0.72 0.2 25);
-  --sidebar: oklch(0.19 0.008 60);
-  --sidebar-foreground: oklch(0.97 0.005 85);
-  --sidebar-primary: oklch(0.68 0.15 152);
-  --sidebar-primary-foreground: oklch(0.16 0.02 60);
-  --sidebar-accent: oklch(0.27 0.01 60);
-  --sidebar-accent-foreground: oklch(0.97 0.005 85);
+  --sidebar: oklch(0.2 0.015 245);
+  --sidebar-foreground: oklch(0.97 0.005 220);
+  --sidebar-primary: oklch(0.72 0.14 200);
+  --sidebar-primary-foreground: oklch(0.16 0.02 245);
+  --sidebar-accent: oklch(0.27 0.015 245);
+  --sidebar-accent-foreground: oklch(0.97 0.005 220);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.68 0.15 152);
+  --sidebar-ring: oklch(0.72 0.14 200);
 }
 
 @layer base {
@@ -126,7 +124,6 @@
     @apply bg-background text-foreground;
     font-feature-settings: "kern", "liga", "calt";
   }
-  /* دعم RTL */
   html[dir="rtl"] {
     direction: rtl;
   }
@@ -149,20 +146,21 @@
   background: var(--primary);
 }
 
-/* خلفية نقشية خفيفة */
-.pattern-bg {
+/* خلفية شبكة مركز القيادة */
+.grid-bg {
   background-image:
-    radial-gradient(circle at 1px 1px, oklch(0.52 0.13 152 / 0.06) 1px, transparent 0);
-  background-size: 24px 24px;
+    linear-gradient(oklch(0.55 0.14 210 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.55 0.14 210 / 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
-/* تدرج الأخضر السعودي */
-.gradient-saudi {
-  background: linear-gradient(135deg, oklch(0.52 0.13 152) 0%, oklch(0.42 0.12 160) 50%, oklch(0.35 0.1 165) 100%);
+/* تدرج سماوي سيان */
+.gradient-nathra {
+  background: linear-gradient(135deg, oklch(0.55 0.14 210) 0%, oklch(0.5 0.13 235) 50%, oklch(0.45 0.12 255) 100%);
 }
 
-.gradient-saudi-soft {
-  background: linear-gradient(135deg, oklch(0.52 0.13 152 / 0.08) 0%, oklch(0.75 0.14 75 / 0.06) 100%);
+.gradient-nathra-soft {
+  background: linear-gradient(135deg, oklch(0.55 0.14 210 / 0.08) 0%, oklch(0.62 0.18 290 / 0.05) 100%);
 }
 
 /* تأثير زجاجي */
@@ -172,17 +170,7 @@
   -webkit-backdrop-filter: blur(12px);
 }
 .dark .glass {
-  background: oklch(0.21 0.01 60 / 0.7);
-}
-
-/* أنيميشن النبض للحالات */
-@keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 oklch(0.58 0.22 27 / 0.5); }
-  70% { box-shadow: 0 0 0 8px oklch(0.58 0.22 27 / 0); }
-  100% { box-shadow: 0 0 0 0 oklch(0.58 0.22 27 / 0); }
-}
-.pulse-critical {
-  animation: pulse-ring 2s infinite;
+  background: oklch(0.22 0.018 245 / 0.7);
 }
 
 /* خط عربي */
@@ -190,11 +178,38 @@
   font-family: var(--font-cairo), sans-serif;
 }
 
-/* تأثير الظهور */
+/* أنيميشن */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-up {
   animation: fade-up 0.4s ease-out;
+}
+
+/* نبض التنبيه الحرج */
+@keyframes alert-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.58 0.22 27 / 0.5); }
+  50% { box-shadow: 0 0 0 6px oklch(0.58 0.22 27 / 0); }
+}
+.alert-pulse {
+  animation: alert-pulse 1.8s infinite;
+}
+
+/* مسح البث (scan line) */
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+.scan-line {
+  animation: scan 3s linear infinite;
+}
+
+/* وميض REC */
+@keyframes rec-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.3; }
+}
+.rec-blink {
+  animation: rec-blink 1.5s infinite;
 }
