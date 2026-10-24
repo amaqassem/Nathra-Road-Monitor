@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// المناطق الإدارية في المملكة العربية السعودية
+model Region {
+  id        String   @id @default(cuid())
+  name      String   // اسم المنطقة
+  code      String   @unique // الرمز
+  lat       Float
+  lng       Float
+  roads     RoadSegment[]
+  createdAt DateTime @default(now())
+}
+
+// المقاطع الطرقية
+model RoadSegment {
+  id              String   @id @default(cuid())
+  name            String   // اسم الطريق
+  highway         String   // تصنيف الطريق (سريع / إقليمي / ثانوي)
+  regionId        String
+  region          Region   @relation(fields: [regionId], references: [id])
+  length          Float    // الطول بالكيلومتر
+  qualityScore    Float    // درجة الجودة 0-100
+  status          String   // ممتاز / جيد / متوسط / رديء
+  surfaceType     String   // نوع الرصف
+  aadt            Int      // متوسط حركة المرور اليومية
+  lastInspection  DateTime?
+  lat             Float
+  lng             Float
+  issues          Issue[]
+  inspections     Inspection[]
+  sensors         Sensor[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// المشاكل والبلاغات
+model Issue {
+  id            String   @id @default(cuid())
+  roadSegmentId String
+  roadSegment   RoadSegment @relation(fields: [roadSegmentId], references: [id])
+  type          String   // نوع العيب: حفر / تشققات / هبوط / تصدعات
+  severity      String   // الخطورة: منخفضة / متوسطة / عالية / حرجة
+  description   String
+  status        String   // جديد / قيد المعالجة / تم الحل
+  reportedBy    String   // المُبلّغ
+  lat           Float?
+  lng           Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// الفحوصات الميدانية
+model Inspection {
+  id            String   @id @default(cuid())
+  roadSegmentId String
+  roadSegment   RoadSegment @relation(fields: [roadSegmentId], references: [id])
+  inspector     String   // اسم المفتش
+  score         Float    // درجة الفحص
+  notes         String
+  date          DateTime @default(now())
+  createdAt     DateTime @default(now())
+}
+
+// المستشعرات الذكية
+model Sensor {
+  id            String   @id @default(cuid())
+  roadSegmentId String
+  roadSegment   RoadSegment @relation(fields: [roadSegmentId], references: [id])
+  type          String   // نوع المستشعر: اهتزاز / حرارة / رطوبة / مرور
+  status        String   // نشط / معطل / صيانة
+  lastReading   String
+  battery       Int      // نسبة البطارية
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
