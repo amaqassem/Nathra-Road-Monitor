@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from "react"
-import { Loader2, Siren, MapPin, Clock, Cctv, Check, CheckCheck } from "lucide-react"
+import { Loader2, Siren, MapPin, Clock, Cctv, Check, CheckCheck, Building2, Zap } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,6 +19,9 @@ interface Alert {
   status: string
   description: string; descriptionEn: string
   confidence: number
+  authority?: string | null
+  authorityEn?: string | null
+  autoProcessed?: boolean
   createdAt: string
   camera: { name: string; nameEn: string }
   site: { name: string; nameEn: string }
@@ -181,7 +184,25 @@ export function AlertsView() {
                   </Badge>
                 </div>
 
-                <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{desc}</p>
+                <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{desc}</p>
+
+                {/* شارة المعالجة التلقائية + الجهة المختصة */}
+                {(a.autoProcessed || a.authority) && (
+                  <div className="flex items-center gap-1.5 flex-wrap mb-2">
+                    {a.autoProcessed && (
+                      <Badge variant="outline" className="text-[9px] bg-violet-500/10 border-violet-500/25 text-violet-700 dark:text-violet-400 gap-0.5">
+                        <Zap className="h-2.5 w-2.5" />
+                        {isAr ? "معالج تلقائياً" : "Auto-processed"}
+                      </Badge>
+                    )}
+                    {a.authority && (
+                      <Badge variant="outline" className="text-[9px] bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-400 gap-0.5">
+                        <Building2 className="h-2.5 w-2.5" />
+                        {isAr ? a.authority : a.authorityEn}
+                      </Badge>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
