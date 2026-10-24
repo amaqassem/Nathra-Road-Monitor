@@ -209,5 +209,37 @@ export async function seedDatabase() {
     })
   }
 
+  // إنشاء قائمة الوجوه المراقبة
+  const watchlist = [
+    { ar: "أحمد المالكي", en: "Ahmad Al-Maliki", roleAr: "موظف", roleEn: "Employee", statusAr: "نشط", statusEn: "Active", notes: "وصول كامل - إدارة" },
+    { ar: "سارة العتيبي", en: "Sara Al-Otaibi", roleAr: "موظف", roleEn: "Employee", statusAr: "نشط", statusEn: "Active", notes: "دوام صباحي" },
+    { ar: "خالد الحربي", en: "Khalid Al-Harbi", roleAr: "زائر", roleEn: "Visitor", statusAr: "نشط", statusEn: "Active", notes: "موعد متكرر" },
+    { ar: "نورة القحطاني", en: "Noura Al-Qahtani", roleAr: "موظف", roleEn: "Employee", statusAr: "نشط", statusEn: "Active", notes: "أمن الموقع" },
+    { ar: "فهد الزهراني", en: "Fahad Al-Zahrani", roleAr: "ممنوع", roleEn: "Banned", statusAr: "موقوف", statusEn: "Suspended", notes: "ممنوع من الدخول" },
+    { ar: "ريم الشمري", en: "Reem Al-Shammari", roleAr: "زائر", roleEn: "Visitor", statusAr: "نشط", statusEn: "Active", notes: "مقاول خارجي" },
+    { ar: "عبدالله الدوسري", en: "Abdullah Al-Dosari", roleAr: "موظف", roleEn: "Employee", statusAr: "نشط", statusEn: "Active", notes: "إدارة الصيانة" },
+    { ar: "ماجد الغامدي", en: "Majed Al-Ghamdi", roleAr: "ممنوع", roleEn: "Banned", statusAr: "موقوف", statusEn: "Suspended", notes: "تحت المراقبة" },
+  ]
+
+  for (const w of watchlist) {
+    const hasMatch = Math.random() > 0.4
+    const siteForMatch = pick(SITES)
+    await db.watchlistPerson.create({
+      data: {
+        name: w.ar,
+        nameEn: w.en,
+        role: w.roleAr,
+        roleEn: w.roleEn,
+        status: w.statusAr,
+        statusEn: w.statusEn,
+        matchCount: hasMatch ? Math.floor(rand(1, 28)) : 0,
+        lastSeen: hasMatch ? new Date(Date.now() - rand(1, 1440) * 60000) : null,
+        lastSite: hasMatch ? siteForMatch.ar : null,
+        lastSiteEn: hasMatch ? siteForMatch.en : null,
+        notes: w.notes,
+      },
+    })
+  }
+
   return { seeded: true, sites: sites.length, cameras: cameras.length }
 }

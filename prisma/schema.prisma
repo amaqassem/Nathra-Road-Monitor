@@ -81,3 +81,21 @@ model Pipeline {
   siteCount   Int
   createdAt   DateTime @default(now())
 }
+
+// قائمة الوجوه المراقبة
+model WatchlistPerson {
+  id          String   @id @default(cuid())
+  name        String
+  nameEn      String
+  role        String   // موظف / زائر / ممنوع
+  roleEn      String
+  status      String   // نشط / موقوف
+  statusEn    String
+  matchCount  Int      @default(0)
+  lastSeen    DateTime?
+  lastSite    String?
+  lastSiteEn  String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

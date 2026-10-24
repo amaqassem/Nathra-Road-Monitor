@@ -1,14 +1,19 @@
 'use client'
 
 import { useEffect, useState, useCallback } from "react"
-import { Loader2, Search, Cctv, MapPin, Video, Zap, Clock, Filter, Radio } from "lucide-react"
+import { Loader2, Search, Cctv, MapPin, Filter, Maximize2, X, Radio, Camera, Eye } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
+import {
+  Dialog, DialogContent, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog"
 import { useI18n } from "../lib/i18n"
+import { LiveCameraFeed } from "../live-camera-feed"
 import {
   CAMERA_STATUS_BG, CAMERA_STATUS_DOT, formatRelativeTime, formatNumber,
 } from "../lib/helpers"
@@ -37,6 +42,8 @@ export function CamerasView() {
   const [status, setStatus] = useState("all")
   const [site, setSite] = useState("all")
   const [query, setQuery] = useState("")
+  const [selected, setSelected] = useState<Camera | null>(null)
+  const isAr = lang === "ar"
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -61,13 +68,22 @@ export function CamerasView() {
     fetch("/api/sites").then((r) => r.json()).then((d) => setSites(d)).catch(console.error)
   }, [])
 
-  const isAr = lang === "ar"
-
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="text-2xl font-extrabold tracking-tight">{t("cam.title")}</h2>
-        <p className="text-sm text-muted-foreground mt-0.5">{t("cam.subtitle")}</p>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h2 className="text-2xl font-extrabold tracking-tight">{t("cam.title")}</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">{t("cam.subtitle")}</p>
+        </div>
+        {cameras && (
+          <Badge variant="outline" className="gap-1.5 bg-emerald-500/5 border-emerald-500/25 text-emerald-700 dark:text-emerald-400">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
+            {formatNumber(cameras.filter(c => c.status === "online").length, lang)} / {formatNumber(cameras.length, lang)} {isAr ? "بث حي" : "live"}
+          </Badge>
+        )}
       </div>
 
       {/* Filters */}
@@ -114,42 +130,27 @@ export function CamerasView() {
           {cameras?.map((cam) => {
             const isOnline = cam.status === "online"
             return (
-              <Card key={cam.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                {/* منطقة البث المحاكاة */}
-                <div className="relative aspect-video bg-slate-950 overflow-hidden grid-bg">
-                  {isOnline ? (
-                    <>
-                      {/* محاكاة بث — خلفية بتدرج */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950" />
-                      {/* خط المسح */}
-                      <div className="absolute inset-x-0 h-12 bg-gradient-to-b from-cyan-400/20 to-transparent scan-line" />
-                      {/* شبكة كاميرا */}
-                      <div className="absolute inset-0 opacity-20"
-                        style={{ backgroundImage: "linear-gradient(cyan 1px, transparent 1px), linear-gradient(90deg, cyan 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-                      {/* معلومات البث */}
-                      <div className="absolute top-2 right-2 flex items-center gap-1.5 rounded-md bg-black/50 backdrop-blur-sm px-2 py-1 text-white text-[10px]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-red-500 rec-blink" />
-                        <span className="font-bold">LIVE</span>
-                      </div>
-                      <div className="absolute top-2 left-2 rounded-md bg-black/50 backdrop-blur-sm px-2 py-1 text-white text-[10px] font-mono">
-                        {cam.resolution} · {cam.fps}fps
-                      </div>
-                      <div className="absolute bottom-2 right-2 left-2 flex items-center justify-between">
-                        <span className="rounded-md bg-black/50 backdrop-blur-sm px-2 py-1 text-white text-[10px] font-mono">
-                          {isAr ? cam.zone : cam.zoneEn}
-                        </span>
-                        <Radio className="h-3.5 w-3.5 text-cyan-400" />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-500">
-                      <Video className="h-8 w-8 opacity-40" />
-                      <span className="text-[10px]">{t("cam.noStream")}</span>
+              <Card key={cam.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => setSelected(cam)}>
+                <div className="relative">
+                  <LiveCameraFeed
+                    cameraId={cam.id}
+                    cameraName={isAr ? cam.name : cam.nameEn}
+                    zone={isAr ? cam.zone : cam.zoneEn}
+                    model={cam.model}
+                    status={cam.status}
+                    resolution={cam.resolution}
+                    fps={cam.fps}
+                    width={320}
+                    height={180}
+                  />
+                  {/* overlay عند المرور */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <div className="flex items-center gap-1.5 rounded-lg bg-white/20 backdrop-blur-sm px-3 py-1.5 text-white text-xs font-semibold">
+                      <Maximize2 className="h-3.5 w-3.5" />{t("cam.viewLive")}
                     </div>
-                  )}
+                  </div>
                 </div>
 
-                {/* تفاصيل الكاميرا */}
                 <div className="p-3">
                   <div className="flex items-start justify-between gap-2 mb-1.5">
                     <div className="min-w-0">
@@ -162,9 +163,7 @@ export function CamerasView() {
                         <span className="truncate">{isAr ? cam.site.name : cam.site.nameEn}</span>
                       </p>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: CAMERA_STATUS_DOT[cam.status as keyof typeof CAMERA_STATUS_DOT] }} />
-                    </div>
+                    <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: CAMERA_STATUS_DOT[cam.status as keyof typeof CAMERA_STATUS_DOT] }} />
                   </div>
 
                   <div className="grid grid-cols-2 gap-1.5 text-[11px] mb-2">
@@ -184,7 +183,7 @@ export function CamerasView() {
                     </Badge>
                     {cam.lastEventAt && (
                       <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-2.5 w-2.5" />{formatRelativeTime(cam.lastEventAt, lang)}
+                        <Radio className="h-2.5 w-2.5" />{formatRelativeTime(cam.lastEventAt, lang)}
                       </span>
                     )}
                   </div>
@@ -194,6 +193,86 @@ export function CamerasView() {
           })}
         </div>
       )}
+
+      {/* Modal البث الكبير */}
+      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden">
+          <DialogTitle className="sr-only">{selected ? (isAr ? selected.name : selected.nameEn) : ""}</DialogTitle>
+          <DialogDescription className="sr-only">{t("cam.stream")}</DialogDescription>
+          {selected && (
+            <div>
+              {/* البث الكبير */}
+              <div className="relative bg-slate-950">
+                <LiveCameraFeed
+                  cameraId={selected.id}
+                  cameraName={isAr ? selected.name : selected.nameEn}
+                  zone={isAr ? selected.zone : selected.zoneEn}
+                  model={selected.model}
+                  status={selected.status}
+                  resolution={selected.resolution}
+                  fps={selected.fps}
+                  width={800}
+                  height={450}
+                />
+              </div>
+
+              {/* تفاصيل */}
+              <div className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-bold text-lg flex items-center gap-2">
+                      <Cctv className="h-5 w-5 text-primary" />
+                      {isAr ? selected.name : selected.nameEn}
+                    </h3>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <MapPin className="h-3.5 w-3.5" />
+                      {isAr ? selected.site.name : selected.site.nameEn} · {isAr ? selected.zone : selected.zoneEn}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className={`text-xs ${CAMERA_STATUS_BG[selected.status as keyof typeof CAMERA_STATUS_BG]}`}>
+                    {t(`status.${selected.status}` as never)}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div className="rounded-lg border p-2.5">
+                    <p className="text-[10px] text-muted-foreground mb-0.5">{t("cam.resolution")}</p>
+                    <p className="text-sm font-bold">{selected.resolution}</p>
+                  </div>
+                  <div className="rounded-lg border p-2.5">
+                    <p className="text-[10px] text-muted-foreground mb-0.5">{t("cam.fps")}</p>
+                    <p className="text-sm font-bold">{selected.fps} fps</p>
+                  </div>
+                  <div className="rounded-lg border p-2.5">
+                    <p className="text-[10px] text-muted-foreground mb-0.5">{t("cam.model")}</p>
+                    <p className="text-xs font-bold truncate">{isAr ? selected.model : selected.modelEn}</p>
+                  </div>
+                  <div className="rounded-lg border p-2.5">
+                    <p className="text-[10px] text-muted-foreground mb-0.5">{t("cam.events24")}</p>
+                    <p className="text-sm font-bold text-primary">{selected.events24h}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <Camera className="h-3.5 w-3.5" />{isAr ? "لقطة" : "Snapshot"}
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <Eye className="h-3.5 w-3.5" />{isAr ? "تكبير" : "Zoom"}
+                  </Button>
+                  <div className="mr-auto text-[11px] text-muted-foreground flex items-center gap-1">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+                    </span>
+                    {isAr ? "بث مباشر" : "Live streaming"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

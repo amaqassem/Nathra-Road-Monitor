@@ -9,6 +9,7 @@ import {
   Siren,
   BarChart3,
   Workflow,
+  Users,
   Loader2,
   AlertTriangle,
 } from "lucide-react"
@@ -20,10 +21,11 @@ import { VisionView } from "@/components/nathra/views/vision-view"
 import { AlertsView } from "@/components/nathra/views/alerts-view"
 import { AnalyticsView } from "@/components/nathra/views/analytics-view"
 import { PipelinesView } from "@/components/nathra/views/pipelines-view"
+import { WatchlistView } from "@/components/nathra/views/watchlist-view"
 import { useI18n } from "@/components/nathra/lib/i18n"
 import { toast, Toaster } from "sonner"
 
-type TabId = "overview" | "cameras" | "vision" | "alerts" | "analytics" | "pipelines"
+type TabId = "overview" | "cameras" | "vision" | "alerts" | "analytics" | "pipelines" | "watchlist"
 
 export default function Home() {
   const { t, lang } = useI18n()
@@ -38,6 +40,7 @@ export default function Home() {
     { id: "alerts", label: t("nav.alerts"), icon: Siren },
     { id: "analytics", label: t("nav.analytics"), icon: BarChart3 },
     { id: "pipelines", label: t("nav.pipelines"), icon: Workflow },
+    { id: "watchlist", label: t("nav.watchlist"), icon: Users },
   ]
 
   const ensureSeeded = useCallback(async () => {
@@ -121,6 +124,7 @@ export default function Home() {
               {activeTab === "alerts" && <AlertsView />}
               {activeTab === "analytics" && <AnalyticsView />}
               {activeTab === "pipelines" && <PipelinesView />}
+              {activeTab === "watchlist" && <WatchlistView />}
             </motion.div>
           </AnimatePresence>
         )}

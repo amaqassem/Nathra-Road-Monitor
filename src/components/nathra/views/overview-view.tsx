@@ -35,6 +35,7 @@ import {
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useI18n } from "../lib/i18n"
+import { LiveEventTicker } from "../live-event-ticker"
 import {
   SEVERITY_BG,
   ALERT_STATUS_BG,
@@ -177,6 +178,9 @@ export function OverviewView() {
         <KpiCard icon={Building2} label={t("kpi.sites")} value={formatNumber(kpi.totalSites, lang)} unit={t("kpi.sitesUnit")} accent="#0ea5e9" trend="neutral" trendValue={isAr ? "مستقر" : "stable"} delay={240} />
         <KpiCard icon={Power} label={t("kpi.uptime")} value={`${kpi.uptime}%`} accent="#f59e0b" trend="up" trendValue={isAr ? "ممتاز" : "excellent"} delay={300} />
       </div>
+
+      {/* شريط الأحداث اللحظي */}
+      <LiveEventTicker />
 
       {/* Trend + Camera Status */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

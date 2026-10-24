@@ -21,6 +21,7 @@ const ar: Dict = {
   "nav.alerts": "التنبيهات",
   "nav.analytics": "التحليلات",
   "nav.pipelines": "خطوط الإنتاج",
+  "nav.watchlist": "قائمة المراقبة",
 
   // الهيدر
   "header.date": "تاريخ اليوم",
@@ -193,6 +194,7 @@ const en: Dict = {
   "nav.alerts": "Alerts",
   "nav.analytics": "Analytics",
   "nav.pipelines": "Pipelines",
+  "nav.watchlist": "Watchlist",
 
   "header.date": "Today",
   "header.theme": "Toggle theme",

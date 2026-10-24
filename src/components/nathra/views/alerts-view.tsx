@@ -1,14 +1,16 @@
 'use client'
 
 import { useEffect, useState, useCallback } from "react"
-import { Loader2, Siren, MapPin, Clock, Cctv, Activity } from "lucide-react"
+import { Loader2, Siren, MapPin, Clock, Cctv, Check, CheckCheck } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
 import { useI18n } from "../lib/i18n"
 import { SEVERITY_BG, ALERT_STATUS_BG, formatRelativeTime, formatNumber } from "../lib/helpers"
+import { toast } from "sonner"
 
 interface Alert {
   id: string
@@ -26,6 +28,7 @@ export function AlertsView() {
   const { t, lang } = useI18n()
   const [alerts, setAlerts] = useState<Alert[] | null>(null)
   const [loading, setLoading] = useState(true)
+  const [acting, setActing] = useState<string | null>(null)
   const [status, setStatus] = useState("all")
   const [severity, setSeverity] = useState("all")
   const isAr = lang === "ar"
@@ -47,6 +50,37 @@ export function AlertsView() {
     const tmr = setTimeout(load, 200)
     return () => clearTimeout(tmr)
   }, [load])
+
+  // إجراء على تنبيه (استلام/حل)
+  const handleAction = async (alertId: string, action: "acknowledge" | "resolve") => {
+    setActing(alertId)
+    try {
+      const res = await fetch(`/api/alerts/${alertId}/action`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      })
+      if (res.ok) {
+        // تحديث محلي فوري
+        setAlerts((prev) => prev?.map((a) =>
+          a.id === alertId
+            ? { ...a, status: action === "acknowledge" ? "acknowledged" : "resolved" }
+            : a
+        ) || null)
+        toast.success(
+          action === "acknowledge"
+            ? (isAr ? "تم استلام التنبيه" : "Alert acknowledged")
+            : (isAr ? "تم حل التنبيه" : "Alert resolved")
+        )
+      } else {
+        toast.error(isAr ? "فشل التحديث" : "Update failed")
+      }
+    } catch {
+      toast.error(isAr ? "خطأ" : "Error")
+    } finally {
+      setActing(null)
+    }
+  }
 
   const counts = alerts ? {
     total: alerts.length,
@@ -124,8 +158,9 @@ export function AlertsView() {
             const site = isAr ? a.site.name : a.site.nameEn
             const desc = isAr ? a.description : a.descriptionEn
             const isCriticalActive = a.severity === "critical" && a.status === "active"
+            const isActing = acting === a.id
             return (
-              <Card key={a.id} className={`p-4 hover:shadow-md transition-shadow ${isCriticalActive ? "border-red-500/40 alert-pulse" : ""}`}>
+              <Card key={a.id} className={`p-4 transition-shadow ${isCriticalActive ? "border-red-500/40 alert-pulse" : ""}`}>
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
                     <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${a.severity === "critical" ? "bg-red-500/10 text-red-600 dark:text-red-400" : "bg-amber-500/10 text-amber-600 dark:text-amber-400"}`}>
@@ -148,15 +183,57 @@ export function AlertsView() {
 
                 <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{desc}</p>
 
-                <div className="flex items-center justify-between text-[11px]">
-                  <Badge variant="outline" className={`text-[10px] ${ALERT_STATUS_BG[a.status as keyof typeof ALERT_STATUS_BG]}`}>
-                    {t(`status.${a.status}` as never)}
-                  </Badge>
-                  <div className="flex items-center gap-3 text-muted-foreground">
-                    <span className="flex items-center gap-1"><MapPin className="h-2.5 w-2.5" />{site}</span>
-                    <span className="flex items-center gap-1"><Clock className="h-2.5 w-2.5" />{formatRelativeTime(a.createdAt, lang)}</span>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className={`text-[10px] ${ALERT_STATUS_BG[a.status as keyof typeof ALERT_STATUS_BG]}`}>
+                      {t(`status.${a.status}` as never)}
+                    </Badge>
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-2.5 w-2.5" />{site}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-2.5 w-2.5" />{formatRelativeTime(a.createdAt, lang)}
+                    </span>
                   </div>
                 </div>
+
+                {/* أزرار الإجراءات */}
+                {a.status === "active" && (
+                  <div className="flex gap-2 mt-3 pt-3 border-t">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isActing}
+                      onClick={() => handleAction(a.id, "acknowledge")}
+                      className="gap-1.5 h-7 text-[11px] w-full"
+                    >
+                      {isActing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                      {isAr ? "استلام" : "Acknowledge"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={isActing}
+                      onClick={() => handleAction(a.id, "resolve")}
+                      className="gap-1.5 h-7 text-[11px] w-full gradient-nathra text-primary-foreground"
+                    >
+                      {isActing ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCheck className="h-3 w-3" />}
+                      {isAr ? "حل" : "Resolve"}
+                    </Button>
+                  </div>
+                )}
+                {a.status === "acknowledged" && (
+                  <div className="flex gap-2 mt-3 pt-3 border-t">
+                    <Button
+                      size="sm"
+                      disabled={isActing}
+                      onClick={() => handleAction(a.id, "resolve")}
+                      className="gap-1.5 h-7 text-[11px] w-full gradient-nathra text-primary-foreground"
+                    >
+                      {isActing ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCheck className="h-3 w-3" />}
+                      {isAr ? "تم الحل" : "Mark Resolved"}
+                    </Button>
+                  </div>
+                )}
               </Card>
             )
           })}

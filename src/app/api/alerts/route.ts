@@ -54,3 +54,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }
+
+// استلام أو حل تنبيه (body: { id, action })
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { id, action } = body as { id: string; action: "acknowledge" | "resolve" };
+
+    if (!id || !action) {
+      return NextResponse.json({ error: "id and action required" }, { status: 400 });
+    }
+
+    const newStatus = action === "acknowledge" ? "acknowledged" : "resolved";
+
+    const updated = await db.alert.update({
+      where: { id },
+      data: { status: newStatus },
+    });
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error("Alert action error:", error);
+    return NextResponse.json({ error: "Failed" }, { status: 500 });
+  }
+}
