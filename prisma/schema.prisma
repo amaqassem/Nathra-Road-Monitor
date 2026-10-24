@@ -40,6 +40,7 @@ model Camera {
   modelEn     String
   zone        String   // المنطقة داخل الموقع
   zoneEn      String
+  imagePath   String   // مسار صورة المشهد الحقيقي
   events24h   Int      // عدد أحداث آخر 24 ساعة
   lastEventAt DateTime?
   alerts      Alert[]
@@ -61,6 +62,9 @@ model Alert {
   description String
   descriptionEn String
   confidence  Int      // 0-100
+  authority   String?  // الجهة المختصة المُحالة لها
+  authorityEn String?  // بالإنجليزية
+  autoProcessed Boolean @default(false)  // معالج تلقائياً بالذكاء الاصطناعي
   thumbnail   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

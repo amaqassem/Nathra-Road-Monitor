@@ -50,6 +50,35 @@ const ZONES = [
 
 const RESOLUTIONS = ["4K", "1080p", "1080p", "720p"]
 
+// خريطة نوع الموقع → صورة المشهد
+const SITE_IMAGE_MAP: Record<string, string> = {
+  "صناعي": "/cameras/scene-industrial.jpg",
+  "تجزئة": "/cameras/scene-retail.jpg",
+  "مدينة ذكية": "/cameras/scene-airport.jpg",
+  "رعاية صحية": "/cameras/scene-office.jpg",
+}
+// بدائل للتنويع حسب المدينة/الاسم
+const NAME_IMAGE_MAP: Record<string, string> = {
+  "مول العرب": "/cameras/scene-mall.jpg",
+  "حي العليا التجاري": "/cameras/scene-mall.jpg",
+  "ميناء الملك عبدالله": "/cameras/scene-warehouse.jpg",
+  "مجمع الملك عبدالله الصناعي": "/cameras/scene-warehouse.jpg",
+  "مشروع نيوم": "/cameras/scene-parking.jpg",
+  "مطار الملك خالد الدولي": "/cameras/scene-airport.jpg",
+  "البحر الأحمر العالمي": "/cameras/scene-perimeter.jpg",
+  "مدينة الملك عبدالعزيز الطبية": "/cameras/scene-office.jpg",
+}
+const ALL_IMAGES = [
+  "/cameras/scene-mall.jpg",
+  "/cameras/scene-parking.jpg",
+  "/cameras/scene-warehouse.jpg",
+  "/cameras/scene-airport.jpg",
+  "/cameras/scene-office.jpg",
+  "/cameras/scene-industrial.jpg",
+  "/cameras/scene-retail.jpg",
+  "/cameras/scene-perimeter.jpg",
+]
+
 function rand(min: number, max: number) {
   return Math.random() * (max - min) + min
 }
@@ -131,6 +160,8 @@ export async function seedDatabase() {
       const zone = pick(ZONES)
       const hasEvents = status === "online"
       const events24h = hasEvents ? Math.floor(rand(0, 28)) : 0
+      // اختيار صورة المشهد: الاسم أولاً ثم النوع ثم تنويع
+      let imagePath = NAME_IMAGE_MAP[site.name] || SITE_IMAGE_MAP[site.type] || ALL_IMAGES[(camIdx - 1) % ALL_IMAGES.length]
       await db.camera.create({
         data: {
           name: `كاميرا ${camIdx}`,
@@ -143,6 +174,7 @@ export async function seedDatabase() {
           modelEn: model.en,
           zone: zone.ar,
           zoneEn: zone.en,
+          imagePath,
           events24h,
           lastEventAt: events24h > 0 ? new Date(Date.now() - rand(1, 1440) * 60000) : null,
         },

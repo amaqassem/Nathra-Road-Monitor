@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from "react"
-import { Loader2, Search, Cctv, MapPin, Filter, Maximize2, X, Radio, Camera, Eye } from "lucide-react"
+import { Loader2, Search, Cctv, MapPin, Filter, Maximize2, X, Radio, Camera, Eye, ScanLine, BrainCircuit, Building2, CheckCircle2, AlertTriangle } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -15,8 +15,9 @@ import {
 import { useI18n } from "../lib/i18n"
 import { LiveCameraFeed } from "../live-camera-feed"
 import {
-  CAMERA_STATUS_BG, CAMERA_STATUS_DOT, formatRelativeTime, formatNumber,
+  CAMERA_STATUS_BG, CAMERA_STATUS_DOT, SEVERITY_BG, formatRelativeTime, formatNumber,
 } from "../lib/helpers"
+import { toast } from "sonner"
 
 interface Camera {
   id: string
@@ -29,6 +30,7 @@ interface Camera {
   modelEn: string
   zone: string
   zoneEn: string
+  imagePath: string
   events24h: number
   lastEventAt: string | null
   site: { id: string; name: string; nameEn: string; city: string; cityEn: string }
@@ -43,6 +45,8 @@ export function CamerasView() {
   const [site, setSite] = useState("all")
   const [query, setQuery] = useState("")
   const [selected, setSelected] = useState<Camera | null>(null)
+  const [scanning, setScanning] = useState(false)
+  const [scanResult, setScanResult] = useState<any>(null)
   const isAr = lang === "ar"
 
   const load = useCallback(async () => {
@@ -67,6 +71,29 @@ export function CamerasView() {
   useEffect(() => {
     fetch("/api/sites").then((r) => r.json()).then((d) => setSites(d)).catch(console.error)
   }, [])
+
+  const handleScan = async (cameraId: string) => {
+    setScanning(true)
+    setScanResult(null)
+    try {
+      const res = await fetch("/api/auto-scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cameraId }),
+      })
+      const data = await res.json()
+      setScanResult(data)
+      if (data.alertCreated) {
+        toast.success(isAr ? "تم اكتشاف مخالفة وفتح بلاغ تلقائياً" : "Violation detected — alert auto-created")
+      } else if (data.success) {
+        toast.success(isAr ? "تم الفحص — لا توجد مخالفات" : "Scanned — no violations")
+      }
+    } catch {
+      toast.error(isAr ? "فشل الفحص" : "Scan failed")
+    } finally {
+      setScanning(false)
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -130,13 +157,12 @@ export function CamerasView() {
           {cameras?.map((cam) => {
             const isOnline = cam.status === "online"
             return (
-              <Card key={cam.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => setSelected(cam)}>
+              <Card key={cam.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => { setSelected(cam); setScanResult(null) }}>
                 <div className="relative">
                   <LiveCameraFeed
                     cameraId={cam.id}
-                    cameraName={isAr ? cam.name : cam.nameEn}
+                    imagePath={cam.imagePath}
                     zone={isAr ? cam.zone : cam.zoneEn}
-                    model={cam.model}
                     status={cam.status}
                     resolution={cam.resolution}
                     fps={cam.fps}
@@ -205,9 +231,8 @@ export function CamerasView() {
               <div className="relative bg-slate-950">
                 <LiveCameraFeed
                   cameraId={selected.id}
-                  cameraName={isAr ? selected.name : selected.nameEn}
+                  imagePath={selected.imagePath}
                   zone={isAr ? selected.zone : selected.zoneEn}
-                  model={selected.model}
                   status={selected.status}
                   resolution={selected.resolution}
                   fps={selected.fps}
@@ -254,11 +279,17 @@ export function CamerasView() {
                 </div>
 
                 <div className="flex items-center gap-2 pt-1">
-                  <Button variant="outline" size="sm" className="gap-1.5">
-                    <Camera className="h-3.5 w-3.5" />{isAr ? "لقطة" : "Snapshot"}
+                  <Button
+                    size="sm"
+                    disabled={scanning || selected.status !== "online"}
+                    onClick={() => handleScan(selected.id)}
+                    className="gap-1.5 gradient-nathra text-primary-foreground"
+                  >
+                    {scanning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ScanLine className="h-3.5 w-3.5" />}
+                    {scanning ? (isAr ? "جارٍ الفحص..." : "Scanning...") : (isAr ? "فحص الآن" : "Scan Now")}
                   </Button>
                   <Button variant="outline" size="sm" className="gap-1.5">
-                    <Eye className="h-3.5 w-3.5" />{isAr ? "تكبير" : "Zoom"}
+                    <Camera className="h-3.5 w-3.5" />{isAr ? "لقطة" : "Snapshot"}
                   </Button>
                   <div className="mr-auto text-[11px] text-muted-foreground flex items-center gap-1">
                     <span className="relative flex h-2 w-2">
@@ -268,6 +299,51 @@ export function CamerasView() {
                     {isAr ? "بث مباشر" : "Live streaming"}
                   </div>
                 </div>
+
+                {/* نتيجة الفحص التلقائي */}
+                {scanResult && scanResult.success && (
+                  <div className={`rounded-lg border p-3 ${scanResult.alertCreated ? "border-red-500/30 bg-red-500/5" : "border-emerald-500/30 bg-emerald-500/5"}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      {scanResult.alertCreated ? (
+                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                      ) : (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      )}
+                      <span className="text-sm font-bold">
+                        {scanResult.alertCreated
+                          ? (isAr ? "تم اكتشاف مخالفة" : "Violation Detected")
+                          : (isAr ? "لا توجد مخالفات" : "No Violations")}
+                      </span>
+                      <Badge variant="outline" className="text-[10px] ml-auto bg-primary/10 border-primary/25 text-primary">
+                        <BrainCircuit className="h-2.5 w-2.5 ml-1" />
+                        {scanResult.analysis?.riskLevel || "—"}
+                      </Badge>
+                    </div>
+                    {scanResult.analysis?.summary && (
+                      <p className="text-xs text-muted-foreground mb-2">{scanResult.analysis.summary}</p>
+                    )}
+                    {scanResult.alertCreated && scanResult.alert && (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground">{isAr ? "النوع:" : "Type:"}</span>
+                          <span className="font-semibold">{isAr ? scanResult.alert.type : scanResult.alert.typeEn}</span>
+                          <Badge variant="outline" className={`text-[9px] mr-auto ${SEVERITY_BG[scanResult.alert.severity as keyof typeof SEVERITY_BG]}`}>
+                            {t(`status.${scanResult.alert.severity}` as never)}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground">{isAr ? "الثقة:" : "Confidence:"}</span>
+                          <span className="font-bold tabular-nums">{scanResult.alert.confidence}%</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs rounded-md bg-amber-500/10 border border-amber-500/20 px-2 py-1.5">
+                          <Building2 className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                          <span className="text-muted-foreground">{isAr ? "الجهة المختصة:" : "Authority:"}</span>
+                          <span className="font-bold text-amber-700 dark:text-amber-400">{isAr ? scanResult.alert.authority : scanResult.alert.authorityEn}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}

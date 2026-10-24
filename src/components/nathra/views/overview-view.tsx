@@ -36,6 +36,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useI18n } from "../lib/i18n"
 import { LiveEventTicker } from "../live-event-ticker"
+import { AutoScanPanel } from "../auto-scan-panel"
 import {
   SEVERITY_BG,
   ALERT_STATUS_BG,
@@ -179,8 +180,11 @@ export function OverviewView() {
         <KpiCard icon={Power} label={t("kpi.uptime")} value={`${kpi.uptime}%`} accent="#f59e0b" trend="up" trendValue={isAr ? "ممتاز" : "excellent"} delay={300} />
       </div>
 
-      {/* شريط الأحداث اللحظي */}
-      <LiveEventTicker />
+      {/* شريط الأحداث اللحظي + المعالجة التلقائية */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <LiveEventTicker />
+        <AutoScanPanel />
+      </div>
 
       {/* Trend + Camera Status */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
