@@ -4,37 +4,6 @@ import ZAI from "z-ai-web-dev-sdk";
 import fs from "fs";
 import path from "path";
 
-// خريطة نوع المخالفة → الجهة المختصة (عربي/إنجليزي)
-const AUTHORITY_MAP: Record<string, { ar: string; en: string }> = {
-  intrusion: { ar: "الأمن الخاص + الشرطة", en: "Private Security + Police" },
-  perimeter: { ar: "الأمن الخاص + الشرطة", en: "Private Security + Police" },
-  crowd: { ar: "إدارة الحشود الميدانية", en: "Field Crowd Management" },
-  suspicious: { ar: "الأمن الخاص", en: "Private Security" },
-  loitering: { ar: "الأمن الخاص", en: "Private Security" },
-  fight: { ar: "الشرطة + الطوارئ", en: "Police + Emergency" },
-  fall: { ar: "الإسعاف + الأمن", en: "Ambulance + Security" },
-  face: { ar: "الأمن + الجهة المختصة", en: "Security + Authority" },
-  safety: { ar: "السلامة المهنية", en: "Occupational Safety" },
-  fire: { ar: "الدفاع المدني", en: "Civil Defense" },
-  default: { ar: "مركز العمليات الموحد", en: "Unified Operations Center" },
-};
-
-// تطبيق نوع التنبيه على مفتاح القاموس
-function resolveAuthority(violationType: string) {
-  const t = violationType.toLowerCase()
-  if (t.includes("intrus") || t.includes("تسلل")) return AUTHORITY_MAP.intrusion
-  if (t.includes("perimeter") || t.includes("محيط") || t.includes("اختراق")) return AUTHORITY_MAP.perimeter
-  if (t.includes("crowd") || t.includes("ازدحام") || t.includes("حشد")) return AUTHORITY_MAP.crowd
-  if (t.includes("fight") || t.includes("شجار") || t.includes("عنف")) return AUTHORITY_MAP.fight
-  if (t.includes("fall") || t.includes("سقوط")) return AUTHORITY_MAP.fall
-  if (t.includes("face") || t.includes("وجه")) return AUTHORITY_MAP.face
-  if (t.includes("fire") || t.includes("حريق") || t.includes("دخان")) return AUTHORITY_MAP.fire
-  if (t.includes("safety") || t.includes("سلامة") || t.includes("خوذة")) return AUTHORITY_MAP.safety
-  if (t.includes("loiter") || t.includes("تردد")) return AUTHORITY_MAP.loitering
-  if (t.includes("suspicious") || t.includes("مشبوه")) return AUTHORITY_MAP.suspicious
-  return AUTHORITY_MAP.default
-}
-
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
@@ -132,42 +101,133 @@ If the scene is completely normal with no violations, set hasViolation=false and
     analysis = { rawResponse: content, hasViolation: false };
   }
 
-  // إذا فيه مخالفة، أنشئ تنبيه تلقائي + حوّل للجهة المختصة
+  // إذا فيه مخالفة، أنشئ تنبيه + حادث (مع منع التكرار) + أدلة + توجيه + سجل تدقيق
   let createdAlert = null;
+  let createdIncident = null;
+  let deduplicated = false;
+
   if (analysis.hasViolation && Array.isArray(analysis.violations) && analysis.violations.length > 0) {
     // خذ أعلى مخالفة خطورة
-    const sevOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+    const sevOrder: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
     const topViolation = [...analysis.violations].sort(
-      (a, b) => (sevOrder[b.severity as keyof typeof sevOrder] || 0) - (sevOrder[a.severity as keyof typeof sevOrder] || 0)
+      (a: any, b: any) => (sevOrder[b.severity] || 0) - (sevOrder[a.severity] || 0)
     )[0];
 
-    const authority = resolveAuthority(topViolation.typeEn || topViolation.type);
+    const violationTypeEn = (topViolation.typeEn || topViolation.type || "").toLowerCase();
 
-    createdAlert = await db.alert.create({
-      data: {
-        cameraId: camera.id,
-        siteId: camera.siteId,
-        type: topViolation.type,
-        typeEn: topViolation.typeEn || topViolation.type,
-        severity: topViolation.severity,
-        status: "active",
-        description: topViolation.description,
-        descriptionEn: topViolation.descriptionEn || topViolation.description,
-        confidence: Math.round(topViolation.confidence || 80),
-        authority: authority.ar,
-        authorityEn: authority.en,
-        autoProcessed: true,
-      },
-    });
+    // منع التكرار: هل يوجد حادث مفتوح لنفس الكاميرا والنوع خلال ساعة؟
+    const { findDuplicateIncident, resolveAuthority, generateIncidentNo, logAudit, createNotification, fileHash } = await import("@/lib/incidents");
+    const isDuplicate = await findDuplicateIncident(camera.id, violationTypeEn);
+    if (isDuplicate) {
+      deduplicated = true;
+    } else {
+      // التوجيه عبر قواعد DB
+      const authority = await resolveAuthority(violationTypeEn, topViolation.severity, camera.site.typeEn);
 
-    // حدّث آخر حدث للكاميرا
-    await db.camera.update({
-      where: { id: camera.id },
-      data: {
-        events24h: { increment: 1 },
-        lastEventAt: new Date(),
-      },
-    });
+      // أنشئ تنبيه
+      createdAlert = await db.alert.create({
+        data: {
+          cameraId: camera.id,
+          siteId: camera.siteId,
+          type: topViolation.type,
+          typeEn: violationTypeEn,
+          severity: topViolation.severity,
+          status: "active",
+          description: topViolation.description,
+          descriptionEn: topViolation.descriptionEn || topViolation.description,
+          confidence: Math.round(topViolation.confidence || 80),
+          authority: authority?.name,
+          authorityEn: authority?.nameEn,
+          autoProcessed: true,
+        },
+      });
+
+      // أنشئ Incident (الحادث) مع رقم مرجعي + SLA (4 ساعات للحرج، 24 للعالي، 72 للمتوسط، أسبوع للمنخفض)
+      const slaHours: Record<string, number> = { critical: 4, high: 24, medium: 72, low: 168 };
+      const slaHoursVal = slaHours[topViolation.severity] || 72;
+      const incidentNo = await generateIncidentNo();
+
+      createdIncident = await db.incident.create({
+        data: {
+          incidentNo,
+          type: topViolation.type,
+          typeEn: violationTypeEn,
+          severity: topViolation.severity,
+          status: "detected",
+          cameraId: camera.id,
+          siteId: camera.siteId,
+          description: topViolation.description,
+          descriptionEn: topViolation.descriptionEn || topViolation.description,
+          aiConfidence: Math.round(topViolation.confidence || 80),
+          authorityId: authority?.id,
+          gpsLat: camera.site.lat,
+          gpsLng: camera.site.lng,
+          slaDeadline: new Date(Date.now() + slaHoursVal * 3600 * 1000),
+          autoCreated: true,
+        },
+      });
+
+      // اربط التنبيه بالحادث
+      await db.alert.update({ where: { id: createdAlert.id }, data: { incidentId: createdIncident.id } });
+
+      // احفظ الدليل (صورة الكاميرا + hash)
+      try {
+        const publicPath = path.join(process.cwd(), "public", camera.imagePath.replace(/^\//, ""));
+        const buffer = fs.readFileSync(publicPath);
+        const hash = fileHash(buffer);
+        await db.incidentEvidence.create({
+          data: {
+            incidentId: createdIncident.id,
+            type: "image",
+            filePath: camera.imagePath,
+            fileName: `evidence-${incidentNo}.jpg`,
+            fileSize: buffer.length,
+            fileHash: hash,
+            accessLogs: JSON.stringify([{ actor: "system", action: "captured", at: new Date().toISOString() }]),
+          },
+        });
+      } catch (e) {
+        console.error("Evidence save failed:", e);
+      }
+
+      // سجّل في Audit Log
+      await logAudit({
+        incidentId: createdIncident.id,
+        action: "incident_created",
+        actor: "AI Auto-Scan",
+        details: JSON.stringify({
+          source: "auto_scan",
+          cameraId: camera.id,
+          cameraName: camera.nameEn,
+          violationType: violationTypeEn,
+          severity: topViolation.severity,
+          confidence: Math.round(topViolation.confidence || 80),
+          authority: authority?.nameEn,
+        }),
+      });
+
+      await logAudit({
+        incidentId: createdIncident.id,
+        action: "authority_routed",
+        actor: "Routing Engine",
+        details: JSON.stringify({ authority: authority?.nameEn, sandboxMode: true }),
+      });
+
+      // أنشئ إشعار in-app
+      await createNotification({
+        incidentId: createdIncident.id,
+        type: "incident_created",
+        title: `حادث جديد: ${topViolation.type}`,
+        message: `${incidentNo} · ${camera.site.name} · خطورة ${topViolation.severity} · حُوّل إلى ${authority?.name}`,
+        recipient: "operators",
+      });
+
+      // حدّث آخر حدث للكاميرا
+      await db.camera.update({
+        where: { id: camera.id },
+        data: { events24h: { increment: 1 }, lastEventAt: new Date() },
+      });
+    }
   }
 
   return NextResponse.json({
@@ -183,6 +243,8 @@ If the scene is completely normal with no violations, set hasViolation=false and
     },
     analysis,
     alertCreated: !!createdAlert,
+    deduplicated,
+    incidentCreated: !!createdIncident,
     alert: createdAlert ? {
       id: createdAlert.id,
       type: createdAlert.type,
@@ -191,6 +253,16 @@ If the scene is completely normal with no violations, set hasViolation=false and
       authority: createdAlert.authority,
       authorityEn: createdAlert.authorityEn,
       confidence: createdAlert.confidence,
+    } : null,
+    incident: createdIncident ? {
+      id: createdIncident.id,
+      incidentNo: createdIncident.incidentNo,
+      type: createdIncident.type,
+      typeEn: createdIncident.typeEn,
+      severity: createdIncident.severity,
+      status: createdIncident.status,
+      authority: createdIncident.authorityId,
+      slaDeadline: createdIncident.slaDeadline,
     } : null,
   });
 }

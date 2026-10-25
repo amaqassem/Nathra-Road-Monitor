@@ -273,5 +273,80 @@ export async function seedDatabase() {
     })
   }
 
-  return { seeded: true, sites: sites.length, cameras: cameras.length }
+  // إنشاء الجهات المختصة
+  const { AUTHORITIES_SEED, ROUTING_RULES_SEED, AUTOMATION_RULES_SEED, AI_MODELS_SEED } = await import('./incidents')
+  const authorities = await Promise.all(
+    AUTHORITIES_SEED.map((a) =>
+      db.authority.create({
+        data: {
+          name: a.ar, nameEn: a.en,
+          category: a.category, categoryEn: a.categoryEn,
+          contactName: a.contactName, contactPhone: a.contactPhone,
+          sandboxMode: a.sandboxMode, active: true,
+        },
+      })
+    )
+  )
+
+  // إنشاء قواعد التوجيه
+  for (const r of ROUTING_RULES_SEED) {
+    const auth = authorities.find((a) => a.nameEn === r.authorityEn)
+    if (auth) {
+      await db.routingRule.create({
+        data: {
+          name: r.ar, nameEn: r.en,
+          conditionType: r.condType,
+          conditionValue: r.condValue,
+          authorityId: auth.id,
+          priority: r.priority,
+          active: true,
+        },
+      })
+    }
+  }
+
+  // إنشاء قواعد الأتمتة
+  for (const r of AUTOMATION_RULES_SEED) {
+    await db.automationRule.create({
+      data: {
+        name: r.ar, nameEn: r.en,
+        description: r.desc,
+        conditions: r.conditions,
+        actions: r.actions,
+        priority: r.priority,
+        active: true,
+      },
+    })
+  }
+
+  // إنشاء نماذج الذكاء الاصطناعي
+  for (const m of AI_MODELS_SEED) {
+    await db.aIModel.create({
+      data: {
+        name: m.ar, nameEn: m.en,
+        task: m.task, taskEn: m.taskEn,
+        version: m.version,
+        threshold: m.threshold,
+        status: m.status,
+        isExperimental: m.experimental,
+      },
+    })
+  }
+
+  // إنشاء مقاييس صحة النظام (بيانات تجريبية موضحة)
+  const metrics = [
+    { metric: "camera_online", value: cameras.filter(c => c.status === "online").length, unit: "cameras", status: "ok" },
+    { metric: "stream_fps", value: 28, unit: "fps", status: "ok" },
+    { metric: "network_latency", value: 42, unit: "ms", status: "ok" },
+    { metric: "storage_usage", value: 67, unit: "%", status: "warning", message: "اقترب المساحة من الحد" },
+    { metric: "ai_latency", value: 380, unit: "ms", status: "ok" },
+    { metric: "failed_jobs", value: 2, unit: "jobs", status: "warning" },
+    { metric: "api_availability", value: 99.8, unit: "%", status: "ok" },
+    { metric: "system_uptime", value: 99.6, unit: "%", status: "ok" },
+  ]
+  for (const m of metrics) {
+    await db.systemHealthMetric.create({ data: { ...m, message: m.message || null } })
+  }
+
+  return { seeded: true, sites: sites.length, cameras: cameras.length, authorities: authorities.length }
 }

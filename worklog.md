@@ -96,3 +96,56 @@ Stage Summary:
 - الجهة المختصة تُحدد تلقائياً حسب نوع المخالفة (السلامة المهنية/الأمن الخاص/الشرطة/الدفاع المدني/الإسعاف)
 - التنبيهات التلقائية تحمل شارة "معالج تلقائياً" + الجهة المختصة
 - lint نظيف 0 أخطاء
+
+---
+Task ID: 5
+Agent: Z.ai Code (sub-agent — general-purpose)
+Task: بناء 4 واجهات React لمنصة "نظرة": محرر القواعد، مساعد الذكاء الاصطناعي، خريطة القيادة الوطنية GIS، إدارة الكاميرات
+
+Work Log:
+- قرأت سياق العمل السابق (Tasks 1-4) + ملفات النظام (i18n, helpers, health-view, incidents-view, globals.css) لفهم الأنماط القائمة
+- File 1 — rules-engine-view.tsx: محرر قواعد بدون كود. يعرض القواعد كـ "IF [field op value] THEN [action]" مع شرائح chips ملوّنة. Switch لتفعيل/إيقاف كل قاعدة (PATCH متفائل + تراجع عند الفشل). Dialog لإنشاء قاعدة جديدة مع condition builder (field/op/value) + action builder (action/params) + priority. POST مع JSON.stringify للمصفوفات. بطاقة معلومات تشرح "ما هي قواعد الأتمتة؟" ثنائية اللغة.
+- File 2 — copilot-view.tsx: واجهة محادثة مع مساعد Nathra AI. أيقونة BrainCircuit في صندوق gradient-nathra. منطقة محادثة قابلة للتمرير (max-h-500px)، رسائل المستخدم على جانب والمساعد على الآخر. شارة مصدر البيانات تحت كل إجابة: "{recordsAnalyzed} سجل · {timestamp}". أسئلة مقترحة كـ chips قابلة للنقر. بطاقة تنبيه + بطاقة مصادر البيانات + بطاقة نصيحة في الشريط الجانبي. استدعاء POST /api/copilot مع {question, lang} + spinner تحميل.
+- File 3 — gis-map-view.tsx: خريطة GIS وطنية. SVG viewBox 660×720 مع مخطط السعودية المبسّط (polygon من 22 نقطة مرسومة بإسقاط lat/lng). علامات المواقع دوائر ملوّنة حسب safetyScore (≥80 أخضر، 60-79 كهرماني، <60 أحمر) بحجم يتناسب مع cameraCount. علامات الحوادث نقاط حمراء/برتقالية مع نبض SVG animate للحرجة. خطوط شبكة lat/lng + علامة مائية "المملكة العربية السعودية". شريط جانبي: فلاتر (Select للخطورة + Switch لإظهار الحوادث) + بطاقة تفاصيل الموقع المختار + قائمة مواقع بأشرطة درجة الأمان + بطاقة تنبيه. استخدم useMemo للإسقاط لتفادي إعادة الرسم غير الضرورية.
+- File 4 — camera-management-view.tsx: لوحة إدارة الكاميرات. بطاقة تنبيه بارزة "وضع العرض" توضح أن البث الفعلي يتطلب MediaMTX/FFmpeg. جدول كاميرات (desktop) + بطاقات (mobile) مع: الاسم، الموقع، شارة الحالة، شارة streamType (rtsp/onvif/hls/webrtc/demo)، مؤشر LIVE/DEMO، الدقة، FPS. Dialog إضافة كاميرا مع: name/nameEn، site (Select من /api/sites)، zone، resolution، fps، streamType، streamUrl (مع ملاحظة "stored on server only")، credentials (password مع ملاحظة "encrypted at rest")، model. ملاحظة أمنية واضحة أن البيانات لا تُرجع للعميل.
+- جميع الواجهات: 'use client'، useI18n + isAr ternary لكل النصوص، h2 + text-2xl font-extrabold + subtitle text-sm text-muted-foreground، Card/Badge/Button/Input/Select/Switch/Dialog من shadcn/ui، أزرار رئيسية gradient-nathra text-primary-foreground، toast من sonner، formatNumber/formatRelativeTime من helpers.
+
+Stage Summary:
+- 4 واجهات جديدة مكتملة في src/components/nathra/views/: rules-engine-view, copilot-view, gis-map-view, camera-management-view
+- جميعها تتبع نفس نمط التصميم القائم (header + cards + bilingual + shadcn/ui)
+- النصوص ثنائية اللغة بالكامل عبر isAr ternary
+- التفاعل مع APIs الحالية يعمل: GET/POST/PATCH /api/automation-rules، POST /api/copilot، GET /api/sites + /api/incidents، GET/POST /api/cameras/manage
+- أمان كريم: بيانات الاعتماد لا تُرجع للعميل، واضح في الواجهة
+- أداء: استخدمت useMemo لرسم علامات الخريطة لتفادي إعادة الحساب
+- lint نظيف 0 أخطاء (eslint exit code 0)
+- TypeScript: لا أخطاء في الملفات الأربعة الجديدة (أخطاء موجودة في ملفات أخرى سابقة، ليست ضمن نطاق المهمة)
+
+---
+Task ID: 6
+Agent: Z.ai Code (main)
+Task: تطوير منصة نظرة إلى منصة مؤسسية متكاملة (Phase 1 + عناصر Phase 2/3)
+
+Work Log:
+- كتبت تقرير Gap Analysis شامل (GAP_ANALYSIS.md) يوضح ما يعمل/ما هو تجريبي/ما يتطلب تكاملات خارجية
+- وسّعت قاعدة البيانات بـ 9 نماذج جديدة: Incident, IncidentEvidence, Authority, RoutingRule, AuditLog, AIModel, AutomationRule, SystemHealthMetric, Notification — مع فهارس وعلاقات
+- بنيت مكتبة incidents.ts مشتركة: generateIncidentNo, fileHash (SHA-256), logAudit, createNotification, findDuplicateIncident (منع التكرار), resolveAuthority (عبر قواعد DB)
+- حدّثت auto-scan: منع تكرار البلاغات (نفس الكاميرا+النوع خلال ساعة) + إنشاء Incident برقم مرجعي INC-2026-XXXX + SLA تلقائي حسب الخطورة + حفظ Evidence بـ hash + Audit Log + إشعار + توجيه للجهة عبر قواعد DB
+- أنشأت 10 APIs جديدة: incidents (GET + [id] GET/PATCH بسير عمل كامل مع validation transitions), evidence (GET + [id] PATCH لـ chain of custody), authorities (GET/POST), routing-rules (GET/POST/PATCH), automation-rules (GET/POST/PATCH), ai-models (GET/PATCH), health (GET), notifications (GET/PATCH), copilot (POST — LLM يستعلم DB الفعلي), cron/scan (POST — background scanner قابل للجدولة), cameras/manage (GET/POST — إضافة RTSP/ONVIF بدون إرجاع credentials)
+- بنيت 8 واجهات جديدة: Incidents (سير عمل كامل 7 حالات + modal تفاصيل + audit log + evidence + SLA + تقديم حالة + تعيين), Evidence Vault (hash + chain of custody + أزرار view/verify/download), Authority Routing (قواعد توجيه + دليل جهات + Sandbox banner + إضافة), Rules Engine (No-Code IF/THEN + تفعيل/تعطيل + إضافة), AI Copilot (شات LLM + أسئلة مقترحة + data source badge + disclaimer), GIS Command Map (SVG خريطة السعودية + علامات مواقع/حوادث + heatmaps), Health Monitor (8 مقاييس + حالة كلية), Camera Management (Demo banner + إضافة RTSP/ONVIF + أمان credentials)
+- أضفت 15 تبويب منظم في 3 مجموعات بفواصل بصرية
+- أضفت مفاتيح i18n لكل التبويبات الجديدة
+- وفّرت subagent لبناء 4 واجهات (Rules/Copilot/GIS/CameraMgmt) — Task ID 5
+- أصلحت أخطاء: FlaskTriangle→FlaskConical, a.params object rendering في Rules Engine
+- تحققت: 8 حوادث مع أدلة+audit+توجيه, تقديم حالة يعمل (toast), 15 تبويب تعمل, Evidence hashes ظاهرة, Sandbox banner, Demo banner للكاميرات, lint نظيف
+
+Stage Summary:
+- المنصة الآن مؤسسية بـ 15 وحدة: Overview, Cameras, Camera Mgmt, AI Vision, Incidents, Alerts, Evidence, Routing, Rules, GIS, Analytics, Copilot, Health, Pipelines, Watchlist
+- نظام إدارة حوادث كامل: Detected→Under Review→Confirmed→Assigned→In Progress→Resolved→Closed مع validation + audit + SLA + dedup
+- محرك توجيه قابل للتكوين بقواعد DB + Sandbox mode واضح
+- مستودع أدلة بـ SHA-256 + chain of custody + access logs
+- مساعد AI Copilot يستعلم من DB الفعلي (لا يخترع أرقاماً)
+- خريطة GIS قيادية تفاعلية
+- مراقبة صحة النظام
+- خلفية معالجة (cron/scan) قابلة للجدولة دون متصفح
+- العوائق الموثقة: بث RTSP فعلي (يتطلب MediaMTX), VLM rate limit مؤقت, إرسال لجهات حكومية (يتطلب تكامل رسمي), PostgreSQL للإنتاج
+- lint نظيف 0 أخطاء
