@@ -1,3 +1,4 @@
 {
-  "configured": true
+  "enabled": true,
+  "mode": "production"
 }
