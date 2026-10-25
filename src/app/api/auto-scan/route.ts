@@ -75,7 +75,9 @@ async function runScan(camera: any) {
     return NextResponse.json({ error: "Camera image not found" }, { status: 404 });
   }
 
-  const zai = await ZAI.create();
+ const zai = await ZAI.create({
+  apiKey: process.env.GEMINI_API_KEY || "",
+});
 
   const prompt = `You are an automated security violation detection system for the "Nathra" platform. Analyze this CCTV surveillance frame and detect any security violations or suspicious activities.
 
