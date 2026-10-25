@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import ZAI from "z-ai-web-dev-sdk";
+import { GoogleGenAI } from "@google/genai";
 import fs from "fs";
 import path from "path";
+
+// تهيئة Google GenAI مباشرة باستخدام مفتاح البيئة
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 // خريطة نوع المخالفة → الجهة المختصة (عربي/إنجليزي)
 const AUTHORITY_MAP: Record<string, { ar: string; en: string }> = {
@@ -19,20 +22,19 @@ const AUTHORITY_MAP: Record<string, { ar: string; en: string }> = {
   default: { ar: "مركز العمليات الموحد", en: "Unified Operations Center" },
 };
 
-// تطبيق نوع التنبيه على مفتاح القاموس
 function resolveAuthority(violationType: string) {
-  const t = violationType.toLowerCase()
-  if (t.includes("intrus") || t.includes("تسلل")) return AUTHORITY_MAP.intrusion
-  if (t.includes("perimeter") || t.includes("محيط") || t.includes("اختراق")) return AUTHORITY_MAP.perimeter
-  if (t.includes("crowd") || t.includes("ازدحام") || t.includes("حشد")) return AUTHORITY_MAP.crowd
-  if (t.includes("fight") || t.includes("شجار") || t.includes("عنف")) return AUTHORITY_MAP.fight
-  if (t.includes("fall") || t.includes("سقوط")) return AUTHORITY_MAP.fall
-  if (t.includes("face") || t.includes("وجه")) return AUTHORITY_MAP.face
-  if (t.includes("fire") || t.includes("حريق") || t.includes("دخان")) return AUTHORITY_MAP.fire
-  if (t.includes("safety") || t.includes("سلامة") || t.includes("خوذة")) return AUTHORITY_MAP.safety
-  if (t.includes("loiter") || t.includes("تردد")) return AUTHORITY_MAP.loitering
-  if (t.includes("suspicious") || t.includes("مشبوه")) return AUTHORITY_MAP.suspicious
-  return AUTHORITY_MAP.default
+  const t = violationType.toLowerCase();
+  if (t.includes("intrus") || t.includes("تسلل")) return AUTHORITY_MAP.intrusion;
+  if (t.includes("perimeter") || t.includes("محيط") || t.includes("اختراق")) return AUTHORITY_MAP.perimeter;
+  if (t.includes("crowd") || t.includes("ازدحام") || t.includes("حشد")) return AUTHORITY_MAP.crowd;
+  if (t.includes("fight") || t.includes("شجار") || t.includes("عنف")) return AUTHORITY_MAP.fight;
+  if (t.includes("fall") || t.includes("سقوط")) return AUTHORITY_MAP.fall;
+  if (t.includes("face") || t.includes("وجه")) return AUTHORITY_MAP.face;
+  if (t.includes("fire") || t.includes("حريق") || t.includes("دخان")) return AUTHORITY_MAP.fire;
+  if (t.includes("safety") || t.includes("سلامة") || t.includes("خوذة")) return AUTHORITY_MAP.safety;
+  if (t.includes("loiter") || t.includes("تردد")) return AUTHORITY_MAP.loitering;
+  if (t.includes("suspicious") || t.includes("مشبوه")) return AUTHORITY_MAP.suspicious;
+  return AUTHORITY_MAP.default;
 }
 
 export async function POST(request: Request) {
@@ -40,14 +42,12 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}));
     const requestedCameraId = body?.cameraId as string | undefined;
 
-    // اختيار كاميرا نشطة (عشوائية أو محددة)
     const onlineCameras = await db.camera.findMany({
       where: { status: "online", ...(requestedCameraId ? { id: requestedCameraId } : {}) },
       include: { site: true },
     });
 
     if (onlineCameras.length === 0) {
-      // لو مفيش كاميرا بالـ id المحدد، نختار أي كاميرا نشطة
       const anyOnline = await db.camera.findMany({ where: { status: "online" }, include: { site: true } });
       if (anyOnline.length === 0) {
         return NextResponse.json({ error: "No online cameras" }, { status: 404 });
@@ -65,26 +65,19 @@ export async function POST(request: Request) {
 }
 
 async function runScan(camera: any) {
-  // قراءة الصورة من public وتحويلها base64
   const publicPath = path.join(process.cwd(), "public", camera.imagePath.replace(/^\//, ""));
-  let imageBase64: string;
+  let imageBuffer: Buffer;
   try {
-    const buffer = fs.readFileSync(publicPath);
-    imageBase64 = `data:image/jpeg;base64,${buffer.toString("base64")}`;
+    imageBuffer = fs.readFileSync(publicPath);
   } catch (e) {
     return NextResponse.json({ error: "Camera image not found" }, { status: 404 });
   }
 
-  // ربط المفتاح لضمان قراءته تلقائياً من الـ SDK دون أخطاء
-  if (process.env.GEMINI_API_KEY && !process.env.Z_AI_API_KEY) {
-    process.env.Z_AI_API_KEY = process.env.GEMINI_API_KEY;
-  }
-
-  const zai = await ZAI.create();
+  const base64Image = imageBuffer.toString("base64");
 
   const prompt = `You are an automated security violation detection system for the "Nathra" platform. Analyze this CCTV surveillance frame and detect any security violations or suspicious activities.
 
-Return ONLY valid JSON (no markdown) in this exact structure:
+Return ONLY valid JSON (no markdown block, just raw JSON) in this exact structure:
 {
   "hasViolation": <true if any violation detected, false if scene is normal>,
   "violations": [
@@ -114,20 +107,26 @@ Violation types to look for:
 
 If the scene is completely normal with no violations, set hasViolation=false and return empty violations array. Be conservative — only flag real violations with confidence > 60.`;
 
-  const response = await zai.chat.completions.createVision({
-    messages: [
+  // استخدام نموذج Gemini القوي لتحليل الصور
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: [
       {
-        role: "user",
-        content: [
-          { type: "text", text: prompt },
-          { type: "image_url", image_url: { url: imageBase64 } },
+        role: 'user',
+        parts: [
+          { text: prompt },
+          {
+            inlineData: {
+              mimeType: 'image/jpeg',
+              data: base64Image,
+            },
+          },
         ],
       },
     ],
-    thinking: { type: "disabled" },
   });
 
-  const content = response.choices[0]?.message?.content || "";
+  const content = response.text || "";
 
   let analysis: any;
   try {
@@ -137,10 +136,8 @@ If the scene is completely normal with no violations, set hasViolation=false and
     analysis = { rawResponse: content, hasViolation: false };
   }
 
-  // إذا فيه مخالفة، أنشئ تنبيه تلقائي + حوّل للجهة المختصة
   let createdAlert = null;
   if (analysis.hasViolation && Array.isArray(analysis.violations) && analysis.violations.length > 0) {
-    // خذ أعلى مخالفة خطورة
     const sevOrder = { critical: 4, high: 3, medium: 2, low: 1 };
     const topViolation = [...analysis.violations].sort(
       (a, b) => (sevOrder[b.severity as keyof typeof sevOrder] || 0) - (sevOrder[a.severity as keyof typeof sevOrder] || 0)
@@ -165,7 +162,6 @@ If the scene is completely normal with no violations, set hasViolation=false and
       },
     });
 
-    // حدّث آخر حدث للكاميرا
     await db.camera.update({
       where: { id: camera.id },
       data: {
