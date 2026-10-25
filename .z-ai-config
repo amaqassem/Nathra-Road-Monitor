@@ -1,4 +1,3 @@
 {
-  "enabled": true,
-  "mode": "production"
+  "apiKey": "ENVIRONMENT_VARIABLE"
 }
