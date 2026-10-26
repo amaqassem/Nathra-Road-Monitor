@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import ZAI from "z-ai-web-dev-sdk";
+import { chatCompletion } from "@/lib/ai-provider";
 
 export async function POST(request: Request) {
   try {
@@ -30,12 +30,10 @@ export async function POST(request: Request) {
     const criticalIncidents = openIncidents.filter((i) => i.severity === "critical");
     const slaBreached = openIncidents.filter((i) => i.slaDeadline && i.slaDeadline < new Date());
 
-    // تجميع البيانات حسب السؤال (تجنب إرسال بيانات ضخمة)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const incidentsToday = incidents.filter((i) => i.detectedAt >= today);
 
-    // أكثر المواقع خطورة (أكثر حوادث حرجة)
     const siteRiskMap = new Map<string, { name: string; nameEn: string; critical: number; total: number }>();
     incidents.forEach((i) => {
       const key = i.siteId;
@@ -46,12 +44,10 @@ export async function POST(request: Request) {
     });
     const riskySites = Array.from(siteRiskMap.values()).sort((a, b) => b.critical - a.critical || b.total - a.total).slice(0, 5);
 
-    // أكثر أنواع الحوادث تكراراً
     const typeMap = new Map<string, number>();
     incidents.forEach((i) => { typeMap.set(i.typeEn, (typeMap.get(i.typeEn) || 0) + 1); });
     const topTypes = Array.from(typeMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-    // ساعات الذروة (آخر 7 أيام)
     const hourMap = new Array(24).fill(0);
     incidents.forEach((i) => { hourMap[i.detectedAt.getHours()]++; });
     const peakHour = hourMap.indexOf(Math.max(...hourMap));
@@ -87,9 +83,7 @@ export async function POST(request: Request) {
       healthMetrics: health.map((h) => ({ metric: h.metric, value: h.value, unit: h.unit, status: h.status })),
     };
 
-    const zai = await ZAI.create();
-
-    const systemPrompt = `You are "Nathra AI Copilot", an intelligent assistant for the Nathra security platform. You answer questions based ONLY on the real system data provided below. 
+    const systemPrompt = `You are "Nathra AI Copilot", an intelligent assistant for the Nathra road monitoring platform. You answer questions based ONLY on the real system data provided below.
 
 CRITICAL RULES:
 1. Use ONLY the data in the context. NEVER invent numbers, incidents, or statistics.
@@ -103,16 +97,31 @@ CRITICAL RULES:
 REAL SYSTEM DATA (JSON):
 ${JSON.stringify(context, null, 2)}`;
 
-    const response = await zai.chat.completions.create({
-      messages: [
+    let answer: string;
+    try {
+      answer = await chatCompletion([
         { role: "system", content: systemPrompt },
         { role: "user", content: question },
-      ],
-      thinking: { type: "disabled" },
-    });
-
-    const answer = response.choices[0]?.message?.content || "";
-    const tokens = response.usage?.total_tokens;
+      ]);
+    } catch (error: any) {
+      // AI غير متوفر — أرجع إجابة بناءً على البيانات المحلية
+      return NextResponse.json({
+        success: false,
+        error: "AI service unavailable",
+        answer: userLang === "ar"
+          ? `⚠️ خدمة الذكاء الاصطناعي غير متوفرة حالياً. لإتاحة المساعد، اضبط ZAI_API_KEY في متغيرات البيئة.\n\n📊 بيانات النظام الحالية:\n• المواقع المراقبة: ${context.summary.totalSites}\n• الكاميرات النشطة: ${context.summary.onlineCameras}/${context.summary.totalCameras}\n• الحوادث المفتوحة: ${context.summary.openIncidents}\n• الحوادث الحرجة: ${context.summary.criticalIncidents}\n• الحوادث اليوم: ${context.summary.incidentsToday}\n\nسؤالك: "${question}"`
+          : `⚠️ AI service unavailable. To enable Copilot, set ZAI_API_KEY environment variable.\n\n📊 Current system data:\n• Monitored sites: ${context.summary.totalSites}\n• Online cameras: ${context.summary.onlineCameras}/${context.summary.totalCameras}\n• Open incidents: ${context.summary.openIncidents}\n• Critical incidents: ${context.summary.criticalIncidents}\n• Incidents today: ${context.summary.incidentsToday}\n\nYour question: "${question}"`,
+        question,
+        lang: userLang,
+        dataContext: {
+          generatedAt: context.generatedAt,
+          sources: ["sites", "cameras", "incidents", "alerts", "pipelines", "authorities", "evidence", "system_health"],
+          recordsAnalyzed: sites.length + cameras.length + incidents.length + alerts.length,
+          aiAvailable: false,
+        },
+        setup: "Set ZAI_API_KEY env var to enable AI-powered answers.",
+      }, { status: 200 }); // 200 مع answer حتى لو fallback
+    }
 
     return NextResponse.json({
       success: true,
@@ -123,6 +132,7 @@ ${JSON.stringify(context, null, 2)}`;
         generatedAt: context.generatedAt,
         sources: ["sites", "cameras", "incidents", "alerts", "pipelines", "authorities", "evidence", "system_health"],
         recordsAnalyzed: sites.length + cameras.length + incidents.length + alerts.length,
+        aiAvailable: true,
       },
     });
   } catch (error) {

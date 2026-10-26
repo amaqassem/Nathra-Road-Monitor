@@ -73,9 +73,22 @@ export function VisionView() {
         body: JSON.stringify({ image }),
       })
       const data = await res.json()
-      if (data.success) { setResult(data.analysis); toast.success(isAr ? "اكتمل التحليل" : "Analysis complete") }
-      else { toast.error(data.error || (isAr ? "فشل التحليل" : "Failed")) }
-    } catch { toast.error(isAr ? "خطأ في التحليل" : "Error") }
+      if (data.success) {
+        setResult(data.analysis)
+        toast.success(isAr ? "اكتمل التحليل" : "Analysis complete")
+      } else {
+        // رسالة خطأ واضحة حسب النوع
+        const errMsg = data.retry
+          ? (isAr ? "الخدمة مشغولة الآن، حاول بعد لحظات" : "Service busy, retry shortly")
+          : data.setup
+          ? (isAr ? "خدمة AI غير مُعدة. راجع /api/ai-status" : "AI service not configured. Check /api/ai-status")
+          : (data.error || (isAr ? "فشل التحليل" : "Failed"))
+        toast.error(errMsg, {
+          description: data.setup,
+          duration: 6000,
+        })
+      }
+    } catch { toast.error(isAr ? "خطأ في الاتصال" : "Connection error") }
     finally { setAnalyzing(false) }
   }
 

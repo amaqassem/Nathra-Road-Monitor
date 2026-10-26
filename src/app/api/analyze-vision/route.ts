@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import { analyzeImage } from "@/lib/ai-provider";
 
 export async function POST(request: Request) {
   try {
@@ -10,9 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Image required" }, { status: 400 });
     }
 
-    const zai = await ZAI.create();
-
-    const prompt = `You are an expert AI vision system for a security platform called "Nathra". Analyze this surveillance camera image and provide a comprehensive security assessment.
+    const prompt = `You are an expert AI vision system for the "Nathra" road monitoring platform. Analyze this surveillance camera image and provide a comprehensive assessment.
 
 Return ONLY valid JSON (no markdown, no extra text) in this exact structure:
 {
@@ -39,8 +37,10 @@ Return ONLY valid JSON (no markdown, no extra text) in this exact structure:
 
 Focus on: people detection and counting, behavioral analysis (loitering, suspicious activity, crowd formation, fighting, falls), emotion analysis, object detection, scene understanding, and security risk assessment. Be precise with confidence values.`;
 
-    const response = await zai.chat.completions.createVision({
-      messages: [
+    let content: string;
+
+    try {
+      content = await analyzeImage([
         {
           role: "user",
           content: [
@@ -48,11 +48,32 @@ Focus on: people detection and counting, behavioral analysis (loitering, suspici
             { type: "image_url", image_url: { url: image } },
           ],
         },
-      ],
-      thinking: { type: "disabled" },
-    });
-
-    const content = response.choices[0]?.message?.content || "";
+      ]);
+    } catch (error: any) {
+      // صنّف الخطأ
+      if (error.message === 'AI_RATE_LIMITED') {
+        return NextResponse.json({
+          success: false,
+          error: "AI rate limit reached",
+          setup: "The AI service is rate-limited. Please wait a moment and try again.",
+          retry: true,
+        }, { status: 429 });
+      }
+      if (error.message === 'AI_UNAVAILABLE') {
+        return NextResponse.json({
+          success: false,
+          error: "AI service not configured",
+          setup: "Set ZAI_API_KEY environment variable to enable image analysis. Check /api/ai-status for details.",
+        }, { status: 503 });
+      }
+      // خطأ آخر
+      return NextResponse.json({
+        success: false,
+        error: "Analysis failed",
+        setup: "Check /api/ai-status for service status.",
+        details: error.message,
+      }, { status: 502 });
+    }
 
     let analysis;
     try {

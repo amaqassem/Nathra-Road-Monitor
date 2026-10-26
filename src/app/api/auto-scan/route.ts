@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import ZAI from "z-ai-web-dev-sdk";
+import { analyzeImage, localFallbackAnalysis } from "@/lib/ai-provider";
 import fs from "fs";
 import path from "path";
 
@@ -16,7 +16,6 @@ export async function POST(request: Request) {
     });
 
     if (onlineCameras.length === 0) {
-      // لو مفيش كاميرا بالـ id المحدد، نختار أي كاميرا نشطة
       const anyOnline = await db.camera.findMany({ where: { status: "online" }, include: { site: true } });
       if (anyOnline.length === 0) {
         return NextResponse.json({ error: "No online cameras" }, { status: 404 });
@@ -43,8 +42,6 @@ async function runScan(camera: any) {
   } catch (e) {
     return NextResponse.json({ error: "Camera image not found" }, { status: 404 });
   }
-
-  const zai = await ZAI.create();
 
   const prompt = `You are an automated traffic violation detection system for the "Nathra" road monitoring platform. Analyze this CCTV traffic camera frame from Saudi Arabia roads and detect any traffic violations or road incidents.
 
@@ -77,8 +74,12 @@ Violation types to look for:
 
 Be conservative — only flag real violations. For speeding, consider road context (highway vs intersection). If scene is normal traffic flow, set hasViolation=false.`;
 
-  const response = await zai.chat.completions.createVision({
-    messages: [
+  let analysis: any;
+  let usedFallback = false;
+
+  try {
+    // جرّب تحليل AI الحقيقي
+    const content = await analyzeImage([
       {
         role: "user",
         content: [
@@ -86,18 +87,21 @@ Be conservative — only flag real violations. For speeding, consider road conte
           { type: "image_url", image_url: { url: imageBase64 } },
         ],
       },
-    ],
-    thinking: { type: "disabled" },
-  });
+    ]);
 
-  const content = response.choices[0]?.message?.content || "";
-
-  let analysis: any;
-  try {
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     analysis = JSON.parse(jsonMatch ? jsonMatch[0] : content);
-  } catch {
-    analysis = { rawResponse: content, hasViolation: false };
+  } catch (error: any) {
+    // إذا AI غير متوفر، استخدم fallback المحلي
+    if (error.message === 'AI_UNAVAILABLE' || error.message?.includes('Configuration file not found') || error.message?.includes('ZAI API error') || error.message?.includes('fetch failed')) {
+      console.log("AI unavailable, using local fallback analysis");
+      analysis = localFallbackAnalysis(camera.zone, camera.model);
+      usedFallback = true;
+    } else {
+      console.error("Auto-scan analysis error:", error);
+      analysis = localFallbackAnalysis(camera.zone, camera.model);
+      usedFallback = true;
+    }
   }
 
   // إذا فيه مخالفة، أنشئ تنبيه + حادث (مع منع التكرار) + أدلة + توجيه + سجل تدقيق
@@ -106,7 +110,6 @@ Be conservative — only flag real violations. For speeding, consider road conte
   let deduplicated = false;
 
   if (analysis.hasViolation && Array.isArray(analysis.violations) && analysis.violations.length > 0) {
-    // خذ أعلى مخالفة خطورة
     const sevOrder: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
     const topViolation = [...analysis.violations].sort(
       (a: any, b: any) => (sevOrder[b.severity] || 0) - (sevOrder[a.severity] || 0)
@@ -114,16 +117,13 @@ Be conservative — only flag real violations. For speeding, consider road conte
 
     const violationTypeEn = (topViolation.typeEn || topViolation.type || "").toLowerCase();
 
-    // منع التكرار: هل يوجد حادث مفتوح لنفس الكاميرا والنوع خلال ساعة؟
     const { findDuplicateIncident, resolveAuthority, generateIncidentNo, logAudit, createNotification, fileHash } = await import("@/lib/incidents");
     const isDuplicate = await findDuplicateIncident(camera.id, violationTypeEn);
     if (isDuplicate) {
       deduplicated = true;
     } else {
-      // التوجيه عبر قواعد DB
       const authority = await resolveAuthority(violationTypeEn, topViolation.severity, camera.site.typeEn);
 
-      // أنشئ تنبيه
       createdAlert = await db.alert.create({
         data: {
           cameraId: camera.id,
@@ -141,7 +141,6 @@ Be conservative — only flag real violations. For speeding, consider road conte
         },
       });
 
-      // أنشئ Incident (الحادث) مع رقم مرجعي + SLA (4 ساعات للحرج، 24 للعالي، 72 للمتوسط، أسبوع للمنخفض)
       const slaHours: Record<string, number> = { critical: 4, high: 24, medium: 72, low: 168 };
       const slaHoursVal = slaHours[topViolation.severity] || 72;
       const incidentNo = await generateIncidentNo();
@@ -166,10 +165,8 @@ Be conservative — only flag real violations. For speeding, consider road conte
         },
       });
 
-      // اربط التنبيه بالحادث
       await db.alert.update({ where: { id: createdAlert.id }, data: { incidentId: createdIncident.id } });
 
-      // احفظ الدليل (صورة الكاميرا + hash)
       try {
         const publicPath = path.join(process.cwd(), "public", camera.imagePath.replace(/^\//, ""));
         const buffer = fs.readFileSync(publicPath);
@@ -189,11 +186,10 @@ Be conservative — only flag real violations. For speeding, consider road conte
         console.error("Evidence save failed:", e);
       }
 
-      // سجّل في Audit Log
       await logAudit({
         incidentId: createdIncident.id,
         action: "incident_created",
-        actor: "AI Auto-Scan",
+        actor: usedFallback ? "AI Auto-Scan (fallback)" : "AI Auto-Scan",
         details: JSON.stringify({
           source: "auto_scan",
           cameraId: camera.id,
@@ -202,6 +198,7 @@ Be conservative — only flag real violations. For speeding, consider road conte
           severity: topViolation.severity,
           confidence: Math.round(topViolation.confidence || 80),
           authority: authority?.nameEn,
+          fallback: usedFallback,
         }),
       });
 
@@ -212,7 +209,6 @@ Be conservative — only flag real violations. For speeding, consider road conte
         details: JSON.stringify({ authority: authority?.nameEn, sandboxMode: true }),
       });
 
-      // أنشئ إشعار in-app
       await createNotification({
         incidentId: createdIncident.id,
         type: "incident_created",
@@ -221,7 +217,6 @@ Be conservative — only flag real violations. For speeding, consider road conte
         recipient: "operators",
       });
 
-      // حدّث آخر حدث للكاميرا
       await db.camera.update({
         where: { id: camera.id },
         data: { events24h: { increment: 1 }, lastEventAt: new Date() },
@@ -241,6 +236,7 @@ Be conservative — only flag real violations. For speeding, consider road conte
       site: { name: camera.site.name, nameEn: camera.site.nameEn },
     },
     analysis,
+    usedFallback,
     alertCreated: !!createdAlert,
     deduplicated,
     incidentCreated: !!createdIncident,

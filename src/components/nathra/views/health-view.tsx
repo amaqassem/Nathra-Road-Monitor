@@ -97,6 +97,85 @@ export function HealthView() {
           </p>
         </div>
       </Card>
+
+      {/* بطاقة حالة خدمة الذكاء الاصطناعي */}
+      <AiStatusCard />
     </div>
+  )
+}
+
+// بطاقة حالة AI
+function AiStatusCard() {
+  const { lang } = useI18n()
+  const isAr = lang === "ar"
+  const [status, setStatus] = useState<any>(null)
+
+  useEffect(() => {
+    fetch("/api/ai-status").then((r) => r.json()).then(setStatus).catch(console.error)
+  }, [])
+
+  if (!status) return null
+
+  const providerLabels: Record<string, { ar: string; en: string; color: string }> = {
+    'zai-sdk': { ar: 'Z.ai SDK (محلي)', en: 'Z.ai SDK (local)', color: 'text-emerald-600 dark:text-emerald-400' },
+    'zai-direct': { ar: 'Z.ai API مباشر', en: 'Z.ai Direct API', color: 'text-emerald-600 dark:text-emerald-400' },
+    'local-fallback': { ar: 'احتياطي محلي', en: 'Local Fallback', color: 'text-amber-600 dark:text-amber-400' },
+  }
+  const prov = providerLabels[status.provider] || providerLabels['local-fallback']
+
+  return (
+    <Card className="p-5">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-bold text-base flex items-center gap-2">
+          <Activity className="h-4 w-4 text-primary" />
+          {isAr ? "حالة خدمة الذكاء الاصطناعي" : "AI Service Status"}
+        </h3>
+        <Badge variant="outline" className={`text-[10px] ${status.available ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/25' : 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/25'}`}>
+          <span className="relative flex h-2 w-2 mr-1">
+            <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${status.available ? 'bg-emerald-400' : 'bg-amber-400'} opacity-75`} />
+            <span className={`relative inline-flex h-2 w-2 rounded-full ${status.available ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+          </span>
+          {isAr ? (status.available ? "متاح" : "احتياطي") : (status.available ? "Available" : "Fallback")}
+        </Badge>
+      </div>
+      <div className="space-y-2 text-sm">
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">{isAr ? "المزود" : "Provider"}</span>
+          <span className={`font-bold ${prov.color}`}>{isAr ? prov.ar : prov.en}</span>
+        </div>
+        <p className="text-xs text-muted-foreground">{isAr ? status.message_ar : status.message}</p>
+        {status.env && (
+          <div className="grid grid-cols-2 gap-2 mt-3">
+            <div className="rounded bg-muted/50 px-2 py-1.5">
+              <span className="text-[10px] text-muted-foreground block">ZAI_API_KEY</span>
+              <span className={`text-xs font-bold ${status.env.hasZaiApiKey ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+                {status.env.hasZaiApiKey ? (isAr ? "مضبوط ✓" : "Set ✓") : (isAr ? "غير مضبوط" : "Not set")}
+              </span>
+            </div>
+            <div className="rounded bg-muted/50 px-2 py-1.5">
+              <span className="text-[10px] text-muted-foreground block">ZAI_BASE_URL</span>
+              <span className={`text-xs font-bold ${status.env.hasZaiBaseUrl ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
+                {status.env.hasZaiBaseUrl ? (isAr ? "مضبوط ✓" : "Set ✓") : (isAr ? "افتراضي" : "Default")}
+              </span>
+            </div>
+          </div>
+        )}
+        {status.provider === 'local-fallback' && (
+          <div className="mt-3 rounded-lg bg-amber-500/10 border border-amber-500/20 p-3 text-xs">
+            <p className="font-semibold text-amber-700 dark:text-amber-400 mb-1">
+              {isAr ? "⚠️ لتفعيل التحليل الكامل بالذكاء الاصطناعي:" : "⚠️ To enable full AI analysis:"}
+            </p>
+            <code className="text-[10px] block bg-black/30 rounded px-2 py-1 text-amber-200">
+              ZAI_API_KEY=your-api-key
+            </code>
+            <p className="text-[10px] text-muted-foreground mt-2">
+              {isAr
+                ? "أضف هذا المتغير في لوحة تحكم Vercel أو ملف .env على Hostinger. راجع DEPLOY.md للتفاصيل."
+                : "Add this variable in Vercel dashboard or .env file on Hostinger. See DEPLOY.md for details."}
+            </p>
+          </div>
+        )}
+      </div>
+    </Card>
   )
 }

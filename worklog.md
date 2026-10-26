@@ -237,3 +237,34 @@ Stage Summary:
 - Docker: نشر سلس على أي VPS مع تخزين دائم
 - DEPLOY.md: دليل كامل خطوة بخطوة لكلتا المنصتين
 - lint نظيف + build ناجح + standalone server يعمل
+
+---
+Task ID: 10
+Agent: Z.ai Code (main)
+Task: إصلاح تحليل الصور عند النشر (AI service unavailable)
+
+Work Log:
+- فحصت z-ai-web-dev-sdk: يحتاج ملف .z-ai-config (متوفر فقط في بيئة Z.ai) → عند النشر الخارجي لا يعمل
+- بنيت طبقة تجريد src/lib/ai-provider.ts بـ 3 مستويات:
+  1. z-ai-web-dev-sdk (بيئة Z.ai المحلية)
+  2. استدعاء مباشر لـ ZAI API عبر ZAI_API_KEY + ZAI_BASE_URL env vars (للنشر الخارجي)
+  3. localFallbackAnalysis() — تحليل محلي احتياطي بقواعد بسيطة حسب نوع الطريق
+- بنيت /api/ai-status endpoint: يفحص حالة AI ويرجع provider + env config + رسائل إعداد
+- حدّثت /api/auto-scan: يستخدم analyzeImage() + fallback تلقائي عند فشل AI (مع flag usedFallback)
+- حدّثت /api/analyze-vision: يصنّف الأخطاء (429 rate limit / AI_UNAVAILABLE / خطأ آخر) برسائل واضحة
+- حدّثت /api/copilot: يستخدم chatCompletion() + fallback ببيانات النظام المحلية عند فشل AI
+- أضفت بطاقة "حالة خدمة الذكاء الاصطناعي" في تبويب الصحة: تعرض provider + ZAI_API_KEY status + تعليمات الإعداد
+- أضفت شارة "تحليل محلي احتياطي" في AutoScanPanel عند usedFallback=true
+- حدّثت معالجة الأخطاء في vision-view: toast واضح مع description (retry / setup / error)
+- حدّثت .env.example: وثّقت ZAI_API_KEY + ZAI_BASE_URL
+- حدّثت DEPLOY.md: قسم "الذكاء الاصطناعي" يشرح المتطلبات + fallback + الفحص
+- اختبرت: /api/ai-status يعمل (provider=zai-sdk محلياً)، auto-scan يستخدم fallback عند rate limit، analyze-vision يرجع retry=true عند 429
+- lint نظيف + لا أخطاء
+
+Stage Summary:
+- مشكلة تحليل الصور عند النشر حُلّت: المنصة تعمل في أي بيئة
+- 3 مستويات: Z.ai SDK (محلي) → ZAI_API_KEY مباشر (نشر) → fallback محلي
+- fallback ذكي: يحلل بناءً على نوع الطريق (تقاطع→إشارة، سريع→سرعة، ليلي→قيادة خاطئة)
+- بطاقة حالة AI واضحة في تبويب الصحة + شارات fallback في الواجهات
+- وثّقت كل شيء في DEPLOY.md + .env.example
+- lint نظيف
