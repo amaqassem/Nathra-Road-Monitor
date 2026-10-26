@@ -101,12 +101,11 @@ export async function analyzeImage(
   // إذا كان الموفر هو Google Gemini
   if (client.type === 'gemini') {
     const geminiApiKey = client.apiKey
-    // تحويل الرسائل إلى صيغة Gemini المتوافقة مع gemini-2.5-flash أو 1.5-flash
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`
     
-    // استخلاص النصوص والصور من رسائل Vision
     let promptText = "Analyze this traffic monitoring image for violations:"
     let base64Image = ""
+    let mimeType = "image/jpeg" // القيمة الافتراضية الآمنة
 
     for (const msg of messages) {
       if (typeof msg.content === 'string') {
@@ -120,7 +119,17 @@ export async function analyzeImage(
             if (urlData.startsWith('data:image')) {
               const matches = urlData.match(/^data:([^;]+);base64,(.+)$/)
               if (matches) {
+                mimeType = matches[1] // التقاط نوع الصورة الحقيقي (jpeg, png, webp)
                 base64Image = matches[2]
+              }
+            } else if (urlData.startsWith('http')) {
+              try {
+                const imgRes = await fetch(urlData)
+                const arrayBuffer = await imgRes.arrayBuffer()
+                base64Image = Buffer.from(arrayBuffer).toString('base64')
+                mimeType = imgRes.headers.get('content-type') || 'image/jpeg'
+              } catch (e) {
+                console.error("Failed to fetch image URL:", e)
               }
             }
           }
@@ -137,7 +146,7 @@ export async function analyzeImage(
     if (base64Image) {
       contents[0].parts.push({
         inline_data: {
-          mime_type: "image/jpeg",
+          mime_type: mimeType,
           data: base64Image
         }
       })
