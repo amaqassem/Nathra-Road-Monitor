@@ -30,10 +30,7 @@ interface ScanRecord {
   authority?: string
   authorityEn?: string
   alertId?: string
-<<<<<<< HEAD
   usedFallback?: boolean
-=======
->>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
   timestamp: string
 }
 
@@ -76,10 +73,7 @@ export function AutoScanPanel() {
           authority: data.alert?.authority,
           authorityEn: data.alert?.authorityEn,
           alertId: data.alert?.id,
-<<<<<<< HEAD
           usedFallback: data.usedFallback,
-=======
->>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
           timestamp: new Date().toISOString(),
         }
         setHistory((prev) => [record, ...prev].slice(0, 4))
@@ -249,15 +243,12 @@ export function AutoScanPanel() {
                           </Badge>
                         )}
                       </div>
-<<<<<<< HEAD
                       {rec.usedFallback && (
                         <div className="flex items-center gap-1 text-[9px] text-amber-600 dark:text-amber-400 mb-0.5">
                           <AlertTriangle className="h-2.5 w-2.5" />
-                          {isAr ? "تحليل محلي احتياطي — اضبط ZAI_API_KEY للتحليل الكامل" : "Local fallback — set ZAI_API_KEY for full AI"}
+                          {isAr ? "تحليل محلي احتياطي — اضبط GEMINI_API_KEY للتحليل الكامل" : "Local fallback — set GEMINI_API_KEY for full AI"}
                         </div>
                       )}
-=======
->>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
                       <p className="text-[10px] text-muted-foreground flex items-center gap-1 mb-1">
                         <Cctv className="h-2.5 w-2.5" />{zone} · {siteName}
                       </p>
