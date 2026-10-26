@@ -91,8 +91,8 @@ export async function analyzeImage(
 
   if (client.type === 'gemini') {
     const geminiApiKey = client.apiKey
-    // استخدام النموذج القياسي المدعوم رسمياً في الـ API
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`
+    // تم التحديث إلى gemini-2.0-flash المدعوم رسمياً لتفادي خطأ 404
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`
     
     let promptText = "Analyze this traffic monitoring image for violations:"
     let base64Image = ""
@@ -187,7 +187,8 @@ export async function chatCompletion(
   if (!client) throw new Error('AI_UNAVAILABLE')
 
   if (client.type === 'gemini') {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${client.apiKey}`
+    // تم التحديث إلى gemini-2.0-flash
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${client.apiKey}`
     const formattedContents = messages.map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }]
