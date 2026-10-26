@@ -52,3 +52,12 @@ prompt
 server.log
 # Skills directory
 /skills/
+# Environment variables (أمني)
+.env
+.env.local
+.env.production
+.env.production.local
+
+# Database
+db/*.db
+db/*.db-journal

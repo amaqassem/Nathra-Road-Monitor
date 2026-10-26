@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+dev.log
+server.log
+db/*.db
+db/*.db-journal
+.env
+.env.local
+.env.production
+*.md
+!DEPLOY.md
+!GAP_ANALYSIS.md
+tests
+download
+examples
+worklog.md

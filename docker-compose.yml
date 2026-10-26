@@ -1,0 +1,41 @@
+# ═══════════════════════════════════════════════════════════
+#  Nathra — Docker Compose للنشر السريع على Hostinger VPS
+#  الاستخدام: docker-compose up -d --build
+# ═══════════════════════════════════════════════════════════
+version: "3.8"
+
+services:
+  nathra:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nathra-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DB_PROVIDER=sqlite
+      - DATABASE_URL=file:/app/data/nathra.db
+      - ADMIN_SEED_KEY=${ADMIN_SEED_KEY:-change-me}
+      - ALLOW_PUBLIC_SEED=false
+      - PORT=3000
+      # للذكاء الاصطناعي (z-ai-web-dev-sdk):
+      # - ZAI_API_KEY=${ZAI_API_KEY}
+    volumes:
+      # تخزين دائم لقاعدة البيانات
+      - nathra-data:/app/data
+      # (اختياري) حفظ سجلات النظام
+      - nathra-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  nathra-data:
+    driver: local
+  nathra-logs:
+    driver: local

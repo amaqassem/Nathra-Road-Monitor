@@ -206,3 +206,34 @@ Stage Summary:
 - توجيه تلقائي للجهات المرورية المناسبة
 - تبويبات منظمة في 3 مجموعات منطقية
 - lint نظيف 0 أخطاء
+
+---
+Task ID: 9
+Agent: Z.ai Code (main)
+Task: تجهيز المنصة للنشر على Vercel و Hostinger
+
+Work Log:
+- حلّلت التحدي الأساسي: SQLite لا يستمر على Vercel serverless → بنيت سكريبت setup-db.ts يبدّل provider بين sqlite/postgresql حسب DB_PROVIDER env
+- بنيت scripts/setup-db.ts: يقرأ DB_PROVIDER ويعيد كتابة schema.prisma datasource provider
+- بنيت scripts/seed.ts: تهيئة آمنة من سطر الأوامر (--force لإعادة التهيئة)
+- أمنت /api/seed: في الإنتاج يتطلب header x-admin-key = ADMIN_SEED_KEY env (منع الاستدعاء المفتوح)
+- حدّثت package.json: postinstall=prisma generate، vercel-build=setup-db+generate+next build، start=node standalone، seed/seed:force scripts
+- أنشأت vercel.json: framework=nextjs، buildCommand=bun run vercel-build، DB_PROVIDER=postgresql
+- أنشأت .env.example + .env.production.example بكل المتغيرات موثقة
+- أنشأت Dockerfile متعدد المراحل (builder + runner) لـ Hostinger مع SQLite + volume دائم
+- أنشأت docker-compose.yml مع healthcheck + volumes + env
+- أنشأت docker-entrypoint.sh: يهيئ DB تلقائياً عند أول تشغيل (prisma generate + db push + seed)
+- أنشأت .dockerignore + حدّثت .gitignore (إضافة .env*, db/*.db)
+- حدّثت next.config.ts: standalone output + headers أمنية + ignoreBuildErrors + image optimization
+- حسّنت db.ts: إيقاف سجلات query في الإنتاج + cache على globalThis لـ serverless
+- أنشأت DEPLOY.md شامل: دليل Vercel (PostgreSQL) + Hostinger (Docker و Bun مباشر) + أوامر صيانة + استكشاف أخطاء
+- اختبرت: bun run build نجح (standalone server.js + static + public)، تشغيل standalone server على PORT 3001 نجح (HTTP 200 + /api/health استجاب)، setup-db script يعمل، seed script يعمل
+- تحققت: المنصة تعمل بعد كل التحضيرات، lint نظيف
+
+Stage Summary:
+- المنصة جاهزة للنشر على Vercel (PostgreSQL) و Hostinger (SQLite/Docker)
+- أمن: /api/seed محمي بـ ADMIN_SEED_KEY في الإنتاج
+- مرونة: تبديل مزود DB بـ DB_PROVIDER env (sqlite/postgresql)
+- Docker: نشر سلس على أي VPS مع تخزين دائم
+- DEPLOY.md: دليل كامل خطوة بخطوة لكلتا المنصتين
+- lint نظيف + build ناجح + standalone server يعمل
