@@ -5,16 +5,16 @@
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
     "build": "npx prisma generate && npx prisma db push --accept-data-loss && next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
-    "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
+    "start": "NODE_ENV=production node .next/standalone/server.js",
     "lint": "eslint .",
-    "db:setup": "bun run scripts/setup-db.ts && prisma generate",
+    "db:setup": "node scripts/setup-db.ts && prisma generate",
     "db:push": "prisma db push --accept-data-loss",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
-    "seed": "bun run scripts/seed.ts",
-    "seed:force": "bun run scripts/seed.ts --force",
-    "vercel-build": "bun run scripts/setup-db.ts && prisma generate && next build"
+    "seed": "node scripts/seed.ts",
+    "seed:force": "node scripts/seed.ts --force",
+    "vercel-build": "npx prisma generate && npx prisma db push --accept-data-loss && next build"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
