@@ -113,26 +113,26 @@ export async function resolveAuthority(
   return null
 }
 
-// بيانات الجهات الافتراضية
+// بيانات الجهات المختصة بالمرور
 export const AUTHORITIES_SEED = [
-  { ar: "الأمن الخاص - العمليات", en: "Private Security - Operations", category: "داخلي", categoryEn: "internal", contactName: "مركز العمليات", contactPhone: "940", sandboxMode: true },
-  { ar: "السلامة المهنية", en: "Occupational Safety Dept", category: "داخلي", categoryEn: "internal", contactName: "مدير السلامة", contactPhone: "1001", sandboxMode: true },
-  { ar: "إدارة الحشود الميدانية", en: "Field Crowd Management", category: "داخلي", categoryEn: "internal", contactName: "قائد الحشود", contactPhone: "1002", sandboxMode: true },
-  { ar: "فريق الطوارئ الطبية", en: "Medical Emergency Team", category: "داخلي", categoryEn: "internal", contactName: "الإسعاف", contactPhone: "937", sandboxMode: true },
-  { ar: "الدفاع المدني (تكامل خارجي)", en: "Civil Defense (External)", category: "خارجي", categoryEn: "external", contactName: "العمليات", contactPhone: "999", sandboxMode: true },
-  { ar: "مركز العمليات الموحد", en: "Unified Operations Center", category: "داخلي", categoryEn: "internal", contactName: "مشرف العمليات", contactPhone: "1919", sandboxMode: true },
+  { ar: "إدارة المرور - العمليات", en: "Traffic Operations Center", category: "داخلي", categoryEn: "internal", contactName: "مركز العمليات المرورية", contactPhone: "0112918888", sandboxMode: true },
+  { ar: "الدوريات المرورية", en: "Traffic Patrols", category: "داخلي", categoryEn: "internal", contactName: "قائد الدوريات", contactPhone: "0114777777", sandboxMode: true },
+  { ar: "الإسعاف والطوارئ", en: "Emergency Medical Services", category: "خارجي", categoryEn: "external", contactName: "الهلال الأحمر", contactPhone: "998", sandboxMode: true },
+  { ar: "الدفاع المدني (إنقاذ حوادث)", en: "Civil Defense (Accident Rescue)", category: "خارجي", categoryEn: "external", contactName: "العمليات", contactPhone: "999", sandboxMode: true },
+  { ar: "صيانة الطرق", en: "Road Maintenance Authority", category: "داخلي", categoryEn: "internal", contactName: "إدارة الصيانة", contactPhone: "0114000000", sandboxMode: true },
+  { ar: "مركز العمليات الأمني الموحد", en: "Unified Security Operations", category: "داخلي", categoryEn: "internal", contactName: "مشرف العمليات", contactPhone: "1919", sandboxMode: true },
 ]
 
 export const ROUTING_RULES_SEED = [
-  { ar: "تسليقات وحرائق → الدفاع المدني", en: "Intrusion & Fire → Civil Defense", condType: "incident_type", condValue: "fire", authorityEn: "Civil Defense (External)", priority: 100 },
-  { ar: "مخالفات السلامة → قسم السلامة", en: "Safety Violations → Safety Dept", condType: "incident_type", condValue: "safety", authorityEn: "Occupational Safety Dept", priority: 90 },
-  { ar: "سقوط → الطوارئ الطبية", en: "Fall → Medical Team", condType: "incident_type", condValue: "fall", authorityEn: "Medical Emergency Team", priority: 90 },
-  { ar: "تسلل → الأمن الخاص", en: "Intrusion → Private Security", condType: "incident_type", condValue: "intrusion", authorityEn: "Private Security - Operations", priority: 85 },
-  { ar: "اختراق محيط → الأمن الخاص", en: "Perimeter → Private Security", condType: "incident_type", condValue: "perimeter", authorityEn: "Private Security - Operations", priority: 85 },
-  { ar: "شجار → الأمن الخاص", en: "Fight → Private Security", condType: "incident_type", condValue: "fight", authorityEn: "Private Security - Operations", priority: 80 },
-  { ar: "ازدحام → إدارة الحشود", en: "Crowd → Crowd Management", condType: "incident_type", condValue: "crowd", authorityEn: "Field Crowd Management", priority: 75 },
-  { ar: "مواقع صناعية → السلامة المهنية", en: "Industrial Sites → Safety", condType: "site_type", condValue: "Industrial", authorityEn: "Occupational Safety Dept", priority: 60 },
-  { ar: "حرجة → مركز العمليات الموحد", en: "Critical → Unified Ops", condType: "severity", condValue: "critical", authorityEn: "Unified Operations Center", priority: 50 },
+  { ar: "حوادث مرورية → الإسعاف والدفاع المدني", en: "Traffic Accidents → EMS & Civil Defense", condType: "incident_type", condValue: "accident", authorityEn: "Emergency Medical Services", priority: 100 },
+  { ar: "حوادث مرورية → الدفاع المدني", en: "Accidents → Civil Defense", condType: "incident_type", condValue: "accident", authorityEn: "Civil Defense (Accident Rescue)", priority: 95 },
+  { ar: "تجاوز السرعة العالي → الدوريات المرورية", en: "Excessive Speeding → Traffic Patrols", condType: "incident_type", condValue: "excessive_speed", authorityEn: "Traffic Patrols", priority: 90 },
+  { ar: "قطع الإشارة → الدوريات المرورية", en: "Red Light → Traffic Patrols", condType: "incident_type", condValue: "red_light", authorityEn: "Traffic Patrols", priority: 85 },
+  { ar: "قيادة عكس الاتجاه → الدوريات المرورية", en: "Wrong Way → Traffic Patrols", condType: "incident_type", condValue: "wrong_way", authorityEn: "Traffic Patrols", priority: 85 },
+  { ar: "قيادة خاطئة → الدوريات المرورية", en: "Reckless Driving → Traffic Patrols", condType: "incident_type", condValue: "reckless", authorityEn: "Traffic Patrols", priority: 80 },
+  { ar: "تجاوز السرعة → إدارة المرور", en: "Speeding → Traffic Operations", condType: "incident_type", condValue: "speeding", authorityEn: "Traffic Operations Center", priority: 75 },
+  { ar: "مركبة متوقفة بالخطأ → صيانة الطرق", en: "Illegal Parking → Road Maintenance", condType: "incident_type", condValue: "illegal_parking", authorityEn: "Road Maintenance Authority", priority: 70 },
+  { ar: "حالات حرجة → مركز العمليات الموحد", en: "Critical → Unified Ops", condType: "severity", condValue: "critical", authorityEn: "Unified Security Operations", priority: 60 },
 ]
 
 export const AUTOMATION_RULES_SEED = [
@@ -167,12 +167,12 @@ export const AUTOMATION_RULES_SEED = [
 ]
 
 export const AI_MODELS_SEED = [
-  { ar: "كشف الأشخاص YOLOv8", en: "YOLOv8 Person Detection", task: "كشف الأشخاص", taskEn: "person_detection", version: "v8.2", threshold: 0.65, status: "deployed", experimental: false },
-  { ar: "كشف الحريق والدخان", en: "Fire & Smoke Detection", task: "كشف الحريق", taskEn: "fire_detection", version: "v3.1", threshold: 0.7, status: "deployed", experimental: false },
-  { ar: "كشف السقوط", en: "Fall Detection", task: "كشف السقوط", taskEn: "fall_detection", version: "v2.0", threshold: 0.75, status: "deployed", experimental: false },
-  { ar: "تحليل كثافة الحشود", en: "Crowd Density Analysis", task: "تحليل الحشود", taskEn: "crowd_density", version: "v1.5", threshold: 0.6, status: "deployed", experimental: false },
-  { ar: "كشف PPE (معدات السلامة)", en: "PPE Detection", task: "كشف معدات السلامة", taskEn: "ppe_detection", version: "v2.3", threshold: 0.68, status: "deployed", experimental: false },
-  { ar: "كشف المركبات", en: "Vehicle Detection", task: "كشف المركبات", taskEn: "vehicle_detection", version: "v6.0", threshold: 0.7, status: "deployed", experimental: false },
-  { ar: "كشف الأشياء المهجورة", en: "Abandoned Object Detection", task: "الأشياء المهجورة", taskEn: "abandoned_object", version: "v0.9", threshold: 0.6, status: "staging", experimental: true },
-  { ar: "تحليل المشاعر", en: "Emotion Analysis", task: "تحليل المشاعر", taskEn: "emotion_analysis", version: "v1.2", threshold: 0.55, status: "staging", experimental: true },
+  { ar: "كشف المركبات YOLOv8", en: "YOLOv8 Vehicle Detection", task: "كشف المركبات", taskEn: "vehicle_detection", version: "v8.2", threshold: 0.72, status: "deployed", experimental: false },
+  { ar: "قراءة اللوحات ANPR", en: "ANPR Plate Recognition", task: "قراءة اللوحات", taskEn: "plate_recognition", version: "v4.1", threshold: 0.85, status: "deployed", experimental: false },
+  { ar: "قياس السرعة", en: "Speed Measurement", task: "قياس السرعة", taskEn: "speed_measurement", version: "v3.0", threshold: 0.78, status: "deployed", experimental: false },
+  { ar: "كشف قطع الإشارة", en: "Red Light Detection", task: "كشف الإشارة", taskEn: "red_light_detection", version: "v2.5", threshold: 0.8, status: "deployed", experimental: false },
+  { ar: "كشف الحوادث", en: "Accident Detection", task: "كشف الحوادث", taskEn: "accident_detection", version: "v2.0", threshold: 0.75, status: "deployed", experimental: false },
+  { ar: "تتبع المسارات", en: "Lane Tracking", task: "تتبع المسارات", taskEn: "lane_tracking", version: "v3.3", threshold: 0.7, status: "deployed", experimental: false },
+  { ar: "كشف القيادة الخاطئة", en: "Reckless Driving Detection", task: "القيادة الخاطئة", taskEn: "reckless_driving", version: "v1.1", threshold: 0.65, status: "staging", experimental: true },
+  { ar: "تحليل تدفق المرور", en: "Traffic Flow Analysis", task: "تدفق المرور", taskEn: "traffic_flow", version: "v2.0", threshold: 0.68, status: "staging", experimental: true },
 ]

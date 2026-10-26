@@ -6,7 +6,7 @@ type Dict = Record<string, string>
 const ar: Dict = {
   // عام
   "app.name": "نظرة",
-  "app.tagline": "منصة الأمان الذكي بالرؤية الحاسوبية",
+  "app.tagline": "منصة مراقبة الطرق بالذكاء الاصطناعي",
   "app.loading": "جارٍ تهيئة النظام...",
   "app.error": "تعذّر تحميل البيانات. يرجى تحديث الصفحة.",
   "app.seeded": "تمت تهيئة النظام",
@@ -16,7 +16,7 @@ const ar: Dict = {
 
   // التنقل
   "nav.overview": "نظرة عامة",
-  "nav.cameras": "الكاميرات",
+  "nav.cameras": "كاميرات الطرق",
   "nav.vision": "الرؤية الذكية",
   "nav.alerts": "التنبيهات",
   "nav.analytics": "التحليلات",
@@ -75,19 +75,19 @@ const ar: Dict = {
   "status.medium": "متوسط",
   "status.low": "منخفض",
 
-  // أنواع التنبيهات
-  "alert.intrusion": "تسلل",
-  "alert.crowd": "ازدحام",
-  "alert.suspicious": "سلوك مشبوه",
-  "alert.loitering": "تردد مريب",
-  "alert.fight": "شجار",
-  "alert.fall": "سقوط",
-  "alert.face": "تعرف على الوجه",
-  "alert.perimeter": "اختراق محيط",
+  // أنواع المخالفات المرورية
+  "alert.intrusion": "تجاوز السرعة",
+  "alert.crowd": "ازدحام مروري",
+  "alert.suspicious": "قيادة خاطئة",
+  "alert.loitering": "مركبة متوقفة بالخطأ",
+  "alert.fight": "حادث مروري",
+  "alert.fall": "تعطل مركبة",
+  "alert.face": "قراءة لوحة",
+  "alert.perimeter": "قطع إشارة",
 
   // الكاميرات
-  "cam.title": "شبكة الكاميرات الحية",
-  "cam.subtitle": "مراقبة لحظية لجميع الكاميرات في المواقع المراقبة",
+  "cam.title": "كاميرات مراقبة الطرق",
+  "cam.subtitle": "مراقبة لحظية للطرق والمحاور المرورية في المملكة",
   "cam.search": "ابحث عن كاميرا...",
   "cam.allStatus": "كل الحالات",
   "cam.allSites": "كل المواقع",
@@ -188,7 +188,7 @@ const ar: Dict = {
 
 const en: Dict = {
   "app.name": "Nathra",
-  "app.tagline": "AI-Powered Vision Security Platform",
+  "app.tagline": "AI-Powered Road Monitoring Platform",
   "app.loading": "Initializing system...",
   "app.error": "Failed to load data. Please refresh the page.",
   "app.seeded": "System initialized",
@@ -197,7 +197,7 @@ const en: Dict = {
   "app.realtime": "Real-time",
 
   "nav.overview": "Overview",
-  "nav.cameras": "Cameras",
+  "nav.cameras": "Road Cameras",
   "nav.vision": "AI Vision",
   "nav.alerts": "Alerts",
   "nav.analytics": "Analytics",
@@ -252,17 +252,17 @@ const en: Dict = {
   "status.medium": "Medium",
   "status.low": "Low",
 
-  "alert.intrusion": "Intrusion",
-  "alert.crowd": "Crowd",
-  "alert.suspicious": "Suspicious Behavior",
-  "alert.loitering": "Loitering",
-  "alert.fight": "Fight",
-  "alert.fall": "Fall Detection",
-  "alert.face": "Face Match",
-  "alert.perimeter": "Perimeter Breach",
+  "alert.intrusion": "Speeding",
+  "alert.crowd": "Traffic Congestion",
+  "alert.suspicious": "Reckless Driving",
+  "alert.loitering": "Illegal Parking",
+  "alert.fight": "Traffic Accident",
+  "alert.fall": "Vehicle Breakdown",
+  "alert.face": "Plate Recognition",
+  "alert.perimeter": "Red Light Violation",
 
-  "cam.title": "Live Camera Network",
-  "cam.subtitle": "Real-time monitoring of all cameras across monitored sites",
+  "cam.title": "Road Traffic Cameras",
+  "cam.subtitle": "Real-time monitoring of roads and traffic corridors across the Kingdom",
   "cam.search": "Search camera...",
   "cam.allStatus": "All statuses",
   "cam.allSites": "All sites",

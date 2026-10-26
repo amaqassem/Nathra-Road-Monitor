@@ -38,16 +38,19 @@ export default function Home() {
   const [seedError, setSeedError] = useState(false)
 
   const TABS: { id: TabId; label: string; icon: typeof LayoutDashboard; group: number }[] = [
+    // المجموعة 1: المراقبة
     { id: "overview", label: t("nav.overview"), icon: LayoutDashboard, group: 0 },
+    { id: "gis", label: t("nav.gis"), icon: MapPinned, group: 0 },
     { id: "cameras", label: t("nav.cameras"), icon: Cctv, group: 0 },
     { id: "cameraMgmt", label: t("nav.cameraMgmt"), icon: Settings, group: 0 },
     { id: "vision", label: t("nav.vision"), icon: BrainCircuit, group: 0 },
+    // المجموعة 2: الحوادث
     { id: "incidents", label: t("nav.incidents"), icon: ShieldAlert, group: 1 },
     { id: "alerts", label: t("nav.alerts"), icon: Siren, group: 1 },
     { id: "evidence", label: t("nav.evidence"), icon: FileLock2, group: 1 },
     { id: "routing", label: t("nav.routing"), icon: GitBranch, group: 1 },
     { id: "rules", label: t("nav.rules"), icon: Zap, group: 1 },
-    { id: "gis", label: t("nav.gis"), icon: MapPinned, group: 2 },
+    // المجموعة 3: الاستخبارات
     { id: "analytics", label: t("nav.analytics"), icon: BarChart3, group: 2 },
     { id: "copilot", label: t("nav.copilot"), icon: BrainCircuit, group: 2 },
     { id: "health", label: t("nav.health"), icon: Activity, group: 2 },

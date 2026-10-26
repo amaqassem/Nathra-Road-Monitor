@@ -1,15 +1,15 @@
 import { db } from './db'
 
-// أنواع التنبيهات
+// أنواع المخالفات المرورية
 const ALERT_TYPES = [
-  { ar: "تسلل", en: "Intrusion", key: "intrusion" },
-  { ar: "ازدحام", en: "Crowd", key: "crowd" },
-  { ar: "سلوك مشبوه", en: "Suspicious Behavior", key: "suspicious" },
-  { ar: "تردد مريب", en: "Loitering", key: "loitering" },
-  { ar: "شجار", en: "Fight", key: "fight" },
-  { ar: "سقوط", en: "Fall Detection", key: "fall" },
-  { ar: "تعرف على الوجه", en: "Face Match", key: "face" },
-  { ar: "اختراق محيط", en: "Perimeter Breach", key: "perimeter" },
+  { ar: "تجاوز السرعة", en: "Speeding", key: "speeding" },
+  { ar: "قطع الإشارة الحمراء", en: "Red Light Violation", key: "red_light" },
+  { ar: "تجاوز السرعة العالية", en: "Excessive Speeding", key: "excessive_speed" },
+  { ar: "القيادة الخاطئة", en: "Reckless Driving", key: "reckless" },
+  { ar: "مركبة متوقفة بالخطأ", en: "Illegal Parking", key: "illegal_parking" },
+  { ar: "تجاوز المسار", en: "Lane Violation", key: "lane_violation" },
+  { ar: "القيادة عكس الاتجاه", en: "Wrong Way Driving", key: "wrong_way" },
+  { ar: "حادث مروري", en: "Traffic Accident", key: "accident" },
 ]
 
 const SEVERITIES = ["critical", "high", "medium", "low"]
@@ -18,65 +18,47 @@ const CAMERA_STATUSES = ["online", "online", "online", "online", "offline", "mai
 
 // المواقع (مدن سعودية + قطاعات)
 const SITES = [
-  { ar: "مجمع الملك عبدالله الصناعي", en: "King Abdullah Industrial Park", cityAr: "الجبيل", cityEn: "Jubail", typeAr: "صناعي", typeEn: "Industrial", lat: 27.0, lng: 49.66 },
-  { ar: "مول العرب", en: "Arab Mall", cityAr: "جدة", cityEn: "Jeddah", typeAr: "تجزئة", typeEn: "Retail", lat: 21.5, lng: 39.2 },
-  { ar: "مشروع نيوم", en: "NEOM Project", cityAr: "تبوك", cityEn: "Tabuk", typeAr: "مدينة ذكية", typeEn: "Smart City", lat: 28.0, lng: 35.0 },
-  { ar: "مدينة الملك عبدالعزيز الطبية", en: "KAMC", cityAr: "الرياض", cityEn: "Riyadh", typeAr: "رعاية صحية", typeEn: "Healthcare", lat: 24.7, lng: 46.7 },
-  { ar: "مطار الملك خالد الدولي", en: "KKIA Airport", cityAr: "الرياض", cityEn: "Riyadh", typeAr: "مدينة ذكية", typeEn: "Smart City", lat: 24.96, lng: 46.7 },
-  { ar: "ميناء الملك عبدالله", en: "King Abdullah Port", cityAr: "رابغ", cityEn: "Rabigh", typeAr: "صناعي", typeEn: "Industrial", lat: 22.8, lng: 39.05 },
-  { ar: "البحر الأحمر العالمي", en: "Red Sea International", cityAr: "الوجه", cityEn: "AlWajh", typeAr: "مدينة ذكية", typeEn: "Smart City", lat: 26.2, lng: 36.5 },
-  { ar: "حي العليا التجاري", en: "Olaya Business District", cityAr: "الرياض", cityEn: "Riyadh", typeAr: "تجزئة", typeEn: "Retail", lat: 24.69, lng: 46.68 },
+  { ar: "طريق الرياض-الدمام السريع", en: "Riyadh-Dammam Highway", cityAr: "الرياض", cityEn: "Riyadh", typeAr: "طريق سريع", typeEn: "Highway", lat: 24.7, lng: 47.5, image: "/cameras/road-highway.jpg" },
+  { ar: "تقاطع طريق الملك فهد", en: "King Fahd Road Intersection", cityAr: "الرياض", cityEn: "Riyadh", typeAr: "تقاطع حضري", typeEn: "Urban Intersection", lat: 24.71, lng: 46.68, image: "/cameras/road-intersection.jpg" },
+  { ar: "كورنيش جدة", en: "Jeddah Corniche Road", cityAr: "جدة", cityEn: "Jeddah", typeAr: "طريق ساحلي", typeEn: "Coastal Road", lat: 21.5, lng: 39.2, image: "/cameras/road-corniche.jpg" },
+  { ar: "طريق مكة-المدينة السريع", en: "Mecca-Medina Highway", cityAr: "مكة", cityEn: "Mecca", typeAr: "طريق سريع", typeEn: "Highway", lat: 21.4, lng: 39.8, image: "/cameras/road-mecca.jpg" },
+  { ar: "طريق عسير الجبلي", en: "Asir Mountain Road", cityAr: "أبها", cityEn: "Abha", typeAr: "طريق جبلي", typeEn: "Mountain Road", lat: 18.2, lng: 42.5, image: "/cameras/road-mountain.jpg" },
+  { ar: "طريق تبوك-الوجه الليلي", en: "Tabuk-AlWajh Night Road", cityAr: "تبوك", cityEn: "Tabuk", typeAr: "طريق صحراوي", typeEn: "Desert Road", lat: 28.0, lng: 36.5, image: "/cameras/road-night.jpg" },
+  { ar: "نفق جبل الفيصلية", en: "Faisaliah Tunnel", cityAr: "الرياض", cityEn: "Riyadh", typeAr: "نفق", typeEn: "Tunnel", lat: 24.69, lng: 46.69, image: "/cameras/road-tunnel.jpg" },
+  { ar: "دوار الملك عبدالله", en: "King Abdullah Roundabout", cityAr: "الرياض", cityEn: "Riyadh", typeAr: "دوار", typeEn: "Roundabout", lat: 24.72, lng: 46.71, image: "/cameras/road-roundabout.jpg" },
 ]
 
 const CAMERA_MODELS = [
-  { ar: "كشف الأشخاص YOLOv8", en: "YOLOv8 Person Detection" },
-  { ar: "تتبع متعدد الأهداف", en: "Multi-Object Tracking" },
-  { ar: "تحليل المشاعر", en: "Emotion Analysis" },
-  { ar: "كشف الوجه", en: "Face Recognition" },
-  { ar: "كشف الحرائق", en: "Fire Detection" },
-  { ar: "الخريطة الحرارية", en: "Heatmap Generator" },
+  { ar: "كشف المركبات YOLOv8", en: "YOLOv8 Vehicle Detection" },
+  { ar: "قراءة اللوحات ANPR", en: "ANPR Plate Recognition" },
+  { ar: "قياس السرعة", en: "Speed Measurement" },
+  { ar: "كشف المخالفات المرورية", en: "Traffic Violation Detection" },
+  { ar: "عدّ المركبات", en: "Vehicle Counting" },
+  { ar: "تتبع المركبات", en: "Vehicle Tracking" },
 ]
 
 const ZONES = [
-  { ar: "البوابة الرئيسية", en: "Main Gate" },
-  { ar: "المواقف الشمالية", en: "North Parking" },
-  { ar: "المدخل الشرقي", en: "East Entrance" },
-  { ar: "المنطقة الحساسة", en: "Restricted Zone" },
-  { ar: "الصالة الرئيسية", en: "Main Hall" },
-  { ar: "المخزن", en: "Warehouse" },
-  { ar: "الساحة المركزية", en: "Central Plaza" },
-  { ar: "الممر الجنوبي", en: "South Corridor" },
+  { ar: "المسار الأول", en: "Lane 1" },
+  { ar: "المسار الثاني", en: "Lane 2" },
+  { ar: "المسار الثالث", en: "Lane 3" },
+  { ar: "المسار الطارئ", en: "Emergency Lane" },
+  { ar: "كتف الطريق", en: "Road Shoulder" },
+  { ar: "مدخل التقاطع", en: "Intersection Entry" },
+  { ar: "مخرج التقاطع", en: "Intersection Exit" },
+  { ar: "منطقة الدوار", en: "Roundabout Area" },
 ]
 
 const RESOLUTIONS = ["4K", "1080p", "1080p", "720p"]
 
-// خريطة نوع الموقع → صورة المشهد
-const SITE_IMAGE_MAP: Record<string, string> = {
-  "صناعي": "/cameras/scene-industrial.jpg",
-  "تجزئة": "/cameras/scene-retail.jpg",
-  "مدينة ذكية": "/cameras/scene-airport.jpg",
-  "رعاية صحية": "/cameras/scene-office.jpg",
-}
-// بدائل للتنويع حسب المدينة/الاسم
-const NAME_IMAGE_MAP: Record<string, string> = {
-  "مول العرب": "/cameras/scene-mall.jpg",
-  "حي العليا التجاري": "/cameras/scene-mall.jpg",
-  "ميناء الملك عبدالله": "/cameras/scene-warehouse.jpg",
-  "مجمع الملك عبدالله الصناعي": "/cameras/scene-warehouse.jpg",
-  "مشروع نيوم": "/cameras/scene-parking.jpg",
-  "مطار الملك خالد الدولي": "/cameras/scene-airport.jpg",
-  "البحر الأحمر العالمي": "/cameras/scene-perimeter.jpg",
-  "مدينة الملك عبدالعزيز الطبية": "/cameras/scene-office.jpg",
-}
 const ALL_IMAGES = [
-  "/cameras/scene-mall.jpg",
-  "/cameras/scene-parking.jpg",
-  "/cameras/scene-warehouse.jpg",
-  "/cameras/scene-airport.jpg",
-  "/cameras/scene-office.jpg",
-  "/cameras/scene-industrial.jpg",
-  "/cameras/scene-retail.jpg",
-  "/cameras/scene-perimeter.jpg",
+  "/cameras/road-highway.jpg",
+  "/cameras/road-intersection.jpg",
+  "/cameras/road-corniche.jpg",
+  "/cameras/road-mecca.jpg",
+  "/cameras/road-mountain.jpg",
+  "/cameras/road-night.jpg",
+  "/cameras/road-tunnel.jpg",
+  "/cameras/road-roundabout.jpg",
 ]
 
 function rand(min: number, max: number) {
@@ -88,45 +70,45 @@ function pick<T>(arr: T[]): T {
 
 const PIPELINES = [
   {
-    nameAr: "خط الأمان المحيطي", nameEn: "Perimeter Security Pipeline",
-    descAr: "كشف التسلل واختراق المحيط مع تتبع متعدد الأهداف", descEn: "Intrusion and perimeter breach detection with multi-object tracking",
-    stagesAr: "كشف الحركة|تتبع الأشخاص|تصنيف السلوك|تنبيه", stagesEn: "Motion Detection|Person Tracking|Behavior Classification|Alerting",
+    nameAr: "كشف تجاوز السرعة", nameEn: "Speed Violation Detection",
+    descAr: "قياس سرعة المركبات وكشف المتجاوزين للحد المسموح", descEn: "Vehicle speed measurement and speed limit violation detection",
+    stagesAr: "كشف المركبة|قياس السرعة|مقارنة الحد|تسجيل مخالفة", stagesEn: "Vehicle Detection|Speed Measurement|Limit Compare|Violation Record",
     throughput: 60, latency: 45, sites: 6,
   },
   {
-    nameAr: "إدارة الحشود", nameEn: "Crowd Management",
-    descAr: "تحليل كثافة الحشود وكشف الازدحام في الأماكن العامة", descEn: "Crowd density analysis and congestion detection in public spaces",
-    stagesAr: "كشف الأشخاص|عد الكثافة|تحليل الحركة|تنبيه", stagesEn: "Person Detection|Density Counting|Flow Analysis|Alerting",
-    throughput: 45, latency: 62, sites: 4,
+    nameAr: "قراءة اللوحات ANPR", nameEn: "ANPR Plate Recognition",
+    descAr: "قراءة لوحات المركبات تلقائياً وتسجيلها في قاعدة البيانات", descEn: "Automatic number plate reading and database logging",
+    stagesAr: "كشف المركبة|تحديد اللوحة|قراءة الأحرف|تسجيل", stagesEn: "Vehicle Detection|Plate Localization|OCR|Logging",
+    throughput: 45, latency: 62, sites: 8,
   },
   {
-    nameAr: "التحليل السلوكي", nameEn: "Behavioral Analytics",
-    descAr: "كشف السلوكيات المشبوهة والتردد المريب والشجار", descEn: "Suspicious behavior, loitering, and fight detection",
-    stagesAr: "تتبع الأشخاص|تحليل المسار|تصنيف السلوك|تنبيه", stagesEn: "Person Tracking|Trajectory Analysis|Behavior Classification|Alerting",
-    throughput: 30, latency: 88, sites: 5,
+    nameAr: "كشف قطع الإشارة", nameEn: "Red Light Violation",
+    descAr: "كشف المركبات التي تتجاوز الإشارة الحمراء على التقاطعات", descEn: "Detect vehicles running red lights at intersections",
+    stagesAr: "كشف الإشارة|تحديد الخط|كشف التجاوز|تسجيل مخالفة", stagesEn: "Light Detection|Line Detect|Crossing Detect|Violation Record",
+    throughput: 30, latency: 88, sites: 4,
   },
   {
-    nameAr: "التعرف على الوجه", nameEn: "Face Recognition",
-    descAr: "المصادقة بملامح الوجه للوصول الآمن مع امتثال PDPL", descEn: "Face authentication for secure access with PDPL compliance",
-    stagesAr: "كشف الوجه|استخراج الملامح|المطابقة|تسجيل", stagesEn: "Face Detection|Feature Extraction|Matching|Logging",
-    throughput: 25, latency: 120, sites: 3,
-  },
-  {
-    nameAr: "رؤى التجزئة", nameEn: "Retail Insights",
-    descAr: "تحليل حركة العملاء والخريطة الحرارية في المتاجر", descEn: "Customer flow analysis and heatmaps for retail",
-    stagesAr: "كشف الأشخاص|تتبع المسار|خريطة حرارية|تقارير", stagesEn: "Person Detection|Path Tracking|Heatmap|Reporting",
-    throughput: 50, latency: 55, sites: 2,
-  },
-  {
-    nameAr: "الاستجابة للطوارئ", nameEn: "Emergency Response",
-    descAr: "كشف السقوط والحرائق والحوادث للاستجابة الفورية", descEn: "Fall, fire, and accident detection for instant response",
-    stagesAr: "كشف الحركة|تصنيف الحدث|تقييم الخطورة|إشعار طوارئ", stagesEn: "Motion Detection|Event Classification|Severity Assessment|Emergency Notify",
+    nameAr: "كشف الحوادث المرورية", nameEn: "Traffic Accident Detection",
+    descAr: "كشف الحوادث والاصطدامات للاستجابة الفورية للطوارئ", descEn: "Accident and collision detection for emergency response",
+    stagesAr: "تتبع المركبات|تحليل الحركة|كشف الاصطدام|إشعار طوارئ", stagesEn: "Vehicle Tracking|Motion Analysis|Collision Detect|Emergency Notify",
     throughput: 40, latency: 35, sites: 7,
   },
   {
-    nameAr: "كشف التسلل الليلي", nameEn: "Night Intrusion Detection",
-    descAr: "كشف التسلل في الإضاءة المنخفضة باستخدام الرؤية الحرارية", descEn: "Low-light intrusion detection using thermal vision",
-    stagesAr: "رؤية حرارية|كشف الحركة|تصفية الإنذارات|تنبيه", stagesEn: "Thermal Vision|Motion Detection|Alarm Filtering|Alerting",
+    nameAr: "تحليل تدفق المرور", nameEn: "Traffic Flow Analysis",
+    descAr: "عدّ المركبات وتحليل كثافة المرور والازدحام", descEn: "Vehicle counting, traffic density and congestion analysis",
+    stagesAr: "كشف المركبة|عدّ الكثافة|تحليل التدفق|تقارير", stagesEn: "Vehicle Detection|Density Count|Flow Analysis|Reporting",
+    throughput: 50, latency: 55, sites: 8,
+  },
+  {
+    nameAr: "كشف القيادة الخاطئة", nameEn: "Reckless Driving Detection",
+    descAr: "كشف التغييرات الخطيرة بين المسارات والقيادة المتهورة", descEn: "Dangerous lane changes and reckless driving detection",
+    stagesAr: "تتبع المسار|تحليل الانحراف|تصنيف السلوك|تنبيه", stagesEn: "Lane Tracking|Deviation Analysis|Behavior Class|Alerting",
+    throughput: 35, latency: 50, sites: 5,
+  },
+  {
+    nameAr: "المراقبة الليلية", nameEn: "Night Surveillance",
+    descAr: "مراقبة الطرق ليلاً بكشف المركبات بالأضواء والرؤية الحرارية", descEn: "Night road surveillance with headlight and thermal detection",
+    stagesAr: "رؤية ليلية|كشف الأضواء|تتبع المركبة|تنبيه", stagesEn: "Night Vision|Headlight Detect|Vehicle Tracking|Alerting",
     throughput: 35, latency: 50, sites: 4,
   },
 ]
@@ -160,8 +142,8 @@ export async function seedDatabase() {
       const zone = pick(ZONES)
       const hasEvents = status === "online"
       const events24h = hasEvents ? Math.floor(rand(0, 28)) : 0
-      // اختيار صورة المشهد: الاسم أولاً ثم النوع ثم تنويع
-      let imagePath = NAME_IMAGE_MAP[site.name] || SITE_IMAGE_MAP[site.type] || ALL_IMAGES[(camIdx - 1) % ALL_IMAGES.length]
+      // اختيار صورة المشهد: صورة الطريق المحددة + تنويع
+      const imagePath = site.image || ALL_IMAGES[(camIdx - 1) % ALL_IMAGES.length]
       await db.camera.create({
         data: {
           name: `كاميرا ${camIdx}`,

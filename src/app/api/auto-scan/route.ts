@@ -46,7 +46,7 @@ async function runScan(camera: any) {
 
   const zai = await ZAI.create();
 
-  const prompt = `You are an automated security violation detection system for the "Nathra" platform. Analyze this CCTV surveillance frame and detect any security violations or suspicious activities.
+  const prompt = `You are an automated traffic violation detection system for the "Nathra" road monitoring platform. Analyze this CCTV traffic camera frame from Saudi Arabia roads and detect any traffic violations or road incidents.
 
 Return ONLY valid JSON (no markdown) in this exact structure:
 {
@@ -54,29 +54,28 @@ Return ONLY valid JSON (no markdown) in this exact structure:
   "violations": [
     {
       "type": "<arabic type name>",
-      "typeEn": "<english type: intrusion|crowd|suspicious|loitering|fight|fall|face|perimeter|safety|fire>",
+      "typeEn": "<english type: speeding|red_light|excessive_speed|reckless|illegal_parking|lane_violation|wrong_way|accident>",
       "severity": "<critical|high|medium|low>",
       "confidence": <0-100>,
       "description": "<arabic description>",
       "descriptionEn": "<english description>"
     }
   ],
-  "peopleCount": <estimated number of people>,
-  "summary": "<one-line arabic summary of the scene>",
+  "vehicleCount": <estimated number of vehicles>,
+  "summary": "<one-line arabic summary of the road scene>",
   "riskLevel": "<low|medium|high|critical>"
 }
 
 Violation types to look for:
-- intrusion/perimeter: unauthorized person in restricted area, fence climbing
-- crowd: dangerous crowd density, congestion
-- suspicious: abnormal behavior, unauthorized access attempt
-- loitering: person staying too long in one spot
-- fight: physical altercation, violence
-- fall: person fallen on ground
-- safety: missing safety gear (helmet/vest) in industrial zones, unsafe acts
-- fire: smoke, flames, fire hazard
+- speeding/excessive_speed: vehicles appearing to move fast based on motion blur or road type
+- red_light: vehicle crossing on red light at intersection
+- reckless: dangerous lane changes, erratic driving
+- illegal_parking: vehicle stopped in lane or shoulder without emergency
+- lane_violation: vehicle crossing lane markings improperly
+- wrong_way: vehicle driving against traffic flow
+- accident: collision, stopped vehicles in lane, debris
 
-If the scene is completely normal with no violations, set hasViolation=false and return empty violations array. Be conservative — only flag real violations with confidence > 60.`;
+Be conservative — only flag real violations. For speeding, consider road context (highway vs intersection). If scene is normal traffic flow, set hasViolation=false.`;
 
   const response = await zai.chat.completions.createVision({
     messages: [
