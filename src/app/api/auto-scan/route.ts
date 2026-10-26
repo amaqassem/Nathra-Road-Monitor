@@ -1,15 +1,58 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+<<<<<<< HEAD
 import { analyzeImage, localFallbackAnalysis } from "@/lib/ai-provider";
 import fs from "fs";
 import path from "path";
 
+=======
+import { GoogleGenAI } from "@google/genai";
+import fs from "fs";
+import path from "path";
+
+// تهيئة Google GenAI مباشرة باستخدام مفتاح البيئة
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+
+// خريطة نوع المخالفة → الجهة المختصة (عربي/إنجليزي)
+const AUTHORITY_MAP: Record<string, { ar: string; en: string }> = {
+  intrusion: { ar: "الأمن الخاص + الشرطة", en: "Private Security + Police" },
+  perimeter: { ar: "الأمن الخاص + الشرطة", en: "Private Security + Police" },
+  crowd: { ar: "إدارة الحشود الميدانية", en: "Field Crowd Management" },
+  suspicious: { ar: "الأمن الخاص", en: "Private Security" },
+  loitering: { ar: "الأمن الخاص", en: "Private Security" },
+  fight: { ar: "الشرطة + الطوارئ", en: "Police + Emergency" },
+  fall: { ar: "الإسعاف + الأمن", en: "Ambulance + Security" },
+  face: { ar: "الأمن + الجهة المختصة", en: "Security + Authority" },
+  safety: { ar: "السلامة المهنية", en: "Occupational Safety" },
+  fire: { ar: "الدفاع المدني", en: "Civil Defense" },
+  default: { ar: "مركز العمليات الموحد", en: "Unified Operations Center" },
+};
+
+function resolveAuthority(violationType: string) {
+  const t = violationType.toLowerCase();
+  if (t.includes("intrus") || t.includes("تسلل")) return AUTHORITY_MAP.intrusion;
+  if (t.includes("perimeter") || t.includes("محيط") || t.includes("اختراق")) return AUTHORITY_MAP.perimeter;
+  if (t.includes("crowd") || t.includes("ازدحام") || t.includes("حشد")) return AUTHORITY_MAP.crowd;
+  if (t.includes("fight") || t.includes("شجار") || t.includes("عنف")) return AUTHORITY_MAP.fight;
+  if (t.includes("fall") || t.includes("سقوط")) return AUTHORITY_MAP.fall;
+  if (t.includes("face") || t.includes("وجه")) return AUTHORITY_MAP.face;
+  if (t.includes("fire") || t.includes("حريق") || t.includes("دخان")) return AUTHORITY_MAP.fire;
+  if (t.includes("safety") || t.includes("سلامة") || t.includes("خوذة")) return AUTHORITY_MAP.safety;
+  if (t.includes("loiter") || t.includes("تردد")) return AUTHORITY_MAP.loitering;
+  if (t.includes("suspicious") || t.includes("مشبوه")) return AUTHORITY_MAP.suspicious;
+  return AUTHORITY_MAP.default;
+}
+
+>>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
     const requestedCameraId = body?.cameraId as string | undefined;
 
+<<<<<<< HEAD
     // اختيار كاميرا نشطة (عشوائية أو محددة)
+=======
+>>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
     const onlineCameras = await db.camera.findMany({
       where: { status: "online", ...(requestedCameraId ? { id: requestedCameraId } : {}) },
       include: { site: true },
@@ -33,37 +76,62 @@ export async function POST(request: Request) {
 }
 
 async function runScan(camera: any) {
+<<<<<<< HEAD
   // قراءة الصورة من public وتحويلها base64
   const publicPath = path.join(process.cwd(), "public", camera.imagePath.replace(/^\//, ""));
   let imageBase64: string;
   try {
     const buffer = fs.readFileSync(publicPath);
     imageBase64 = `data:image/jpeg;base64,${buffer.toString("base64")}`;
+=======
+  const publicPath = path.join(process.cwd(), "public", camera.imagePath.replace(/^\//, ""));
+  let imageBuffer: Buffer;
+  try {
+    imageBuffer = fs.readFileSync(publicPath);
+>>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
   } catch (e) {
     return NextResponse.json({ error: "Camera image not found" }, { status: 404 });
   }
 
+<<<<<<< HEAD
   const prompt = `You are an automated traffic violation detection system for the "Nathra" road monitoring platform. Analyze this CCTV traffic camera frame from Saudi Arabia roads and detect any traffic violations or road incidents.
 
 Return ONLY valid JSON (no markdown) in this exact structure:
+=======
+  const base64Image = imageBuffer.toString("base64");
+
+  const prompt = `You are an automated security violation detection system for the "Nathra" platform. Analyze this CCTV surveillance frame and detect any security violations or suspicious activities.
+
+Return ONLY valid JSON (no markdown block, just raw JSON) in this exact structure:
+>>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
 {
   "hasViolation": <true if any violation detected, false if scene is normal>,
   "violations": [
     {
       "type": "<arabic type name>",
+<<<<<<< HEAD
       "typeEn": "<english type: speeding|red_light|excessive_speed|reckless|illegal_parking|lane_violation|wrong_way|accident>",
+=======
+      "typeEn": "<english type: intrusion|crowd|suspicious|loitering|fight|fall|face|perimeter|safety|fire>",
+>>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
       "severity": "<critical|high|medium|low>",
       "confidence": <0-100>,
       "description": "<arabic description>",
       "descriptionEn": "<english description>"
     }
   ],
+<<<<<<< HEAD
   "vehicleCount": <estimated number of vehicles>,
   "summary": "<one-line arabic summary of the road scene>",
+=======
+  "peopleCount": <estimated number of people>,
+  "summary": "<one-line arabic summary of the scene>",
+>>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
   "riskLevel": "<low|medium|high|critical>"
 }
 
 Violation types to look for:
+<<<<<<< HEAD
 - speeding/excessive_speed: vehicles appearing to move fast based on motion blur or road type
 - red_light: vehicle crossing on red light at intersection
 - reckless: dangerous lane changes, erratic driving
@@ -222,6 +290,81 @@ Be conservative — only flag real violations. For speeding, consider road conte
         data: { events24h: { increment: 1 }, lastEventAt: new Date() },
       });
     }
+=======
+- intrusion/perimeter: unauthorized person in restricted area, fence climbing
+- crowd: dangerous crowd density, congestion
+- suspicious: abnormal behavior, unauthorized access attempt
+- loitering: person staying too long in one spot
+- fight: physical altercation, violence
+- fall: person fallen on ground
+- safety: missing safety gear (helmet/vest) in industrial zones, unsafe acts
+- fire: smoke, flames, fire hazard
+
+If the scene is completely normal with no violations, set hasViolation=false and return empty violations array. Be conservative — only flag real violations with confidence > 60.`;
+
+  // استخدام نموذج Gemini القوي لتحليل الصور
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          { text: prompt },
+          {
+            inlineData: {
+              mimeType: 'image/jpeg',
+              data: base64Image,
+            },
+          },
+        ],
+      },
+    ],
+  });
+
+  const content = response.text || "";
+
+  let analysis: any;
+  try {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    analysis = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+  } catch {
+    analysis = { rawResponse: content, hasViolation: false };
+  }
+
+  let createdAlert = null;
+  if (analysis.hasViolation && Array.isArray(analysis.violations) && analysis.violations.length > 0) {
+    const sevOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+    const topViolation = [...analysis.violations].sort(
+      (a, b) => (sevOrder[b.severity as keyof typeof sevOrder] || 0) - (sevOrder[a.severity as keyof typeof sevOrder] || 0)
+    )[0];
+
+    const authority = resolveAuthority(topViolation.typeEn || topViolation.type);
+
+    createdAlert = await db.alert.create({
+      data: {
+        cameraId: camera.id,
+        siteId: camera.siteId,
+        type: topViolation.type,
+        typeEn: topViolation.typeEn || topViolation.type,
+        severity: topViolation.severity,
+        status: "active",
+        description: topViolation.description,
+        descriptionEn: topViolation.descriptionEn || topViolation.description,
+        confidence: Math.round(topViolation.confidence || 80),
+        authority: authority.ar,
+        authorityEn: authority.en,
+        autoProcessed: true,
+      },
+    });
+
+    await db.camera.update({
+      where: { id: camera.id },
+      data: {
+        events24h: { increment: 1 },
+        lastEventAt: new Date(),
+      },
+    });
+>>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
   }
 
   return NextResponse.json({
@@ -236,10 +379,14 @@ Be conservative — only flag real violations. For speeding, consider road conte
       site: { name: camera.site.name, nameEn: camera.site.nameEn },
     },
     analysis,
+<<<<<<< HEAD
     usedFallback,
     alertCreated: !!createdAlert,
     deduplicated,
     incidentCreated: !!createdIncident,
+=======
+    alertCreated: !!createdAlert,
+>>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
     alert: createdAlert ? {
       id: createdAlert.id,
       type: createdAlert.type,
@@ -249,6 +396,7 @@ Be conservative — only flag real violations. For speeding, consider road conte
       authorityEn: createdAlert.authorityEn,
       confidence: createdAlert.confidence,
     } : null,
+<<<<<<< HEAD
     incident: createdIncident ? {
       id: createdIncident.id,
       incidentNo: createdIncident.incidentNo,
@@ -259,5 +407,7 @@ Be conservative — only flag real violations. For speeding, consider road conte
       authority: createdIncident.authorityId,
       slaDeadline: createdIncident.slaDeadline,
     } : null,
+=======
+>>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
   });
 }

@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -41,6 +41,7 @@ model Camera {
   modelEn     String
   zone        String
   zoneEn      String
+<<<<<<< HEAD
   imagePath   String
   // بيانات البث الفعلي (تُخزّن مشفرة على الخادم فقط)
   streamType  String?  // rtsp / onvif / hls / webrtc / demo
@@ -48,6 +49,10 @@ model Camera {
   credentials String?  // بيانات الاعتماد (مشفر)
   isLive      Boolean  @default(false) // هل البث حقيقي أم Demo
   events24h   Int      @default(0)
+=======
+  imagePath   String   // مسار صورة المشهد الحقيقي
+  events24h   Int      // عدد أحداث آخر 24 ساعة
+>>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
   lastEventAt DateTime?
   alerts      Alert[]
   incidents   Incident[]
@@ -68,11 +73,18 @@ model Alert {
   status      String   // active/acknowledged/resolved
   description String
   descriptionEn String
+<<<<<<< HEAD
   confidence  Int
   authority   String?
   authorityEn String?
   autoProcessed Boolean @default(false)
   incidentId  String?  // ربط بالحادث إذا تحول
+=======
+  confidence  Int      // 0-100
+  authority   String?  // الجهة المختصة المُحالة لها
+  authorityEn String?  // بالإنجليزية
+  autoProcessed Boolean @default(false)  // معالج تلقائياً بالذكاء الاصطناعي
+>>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
   thumbnail   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
