@@ -53,7 +53,7 @@ const OPERATOR_LABELS: Record<string, { ar: string; en: string }> = {
 }
 
 const ACTION_META: Record<string, { ar: string; en: string; icon: any; color: string }> = {
-  notify: { ar: "إشعار", en: "Notify", icon: Bell, color: "#06b6d4" },
+  notify: { ar: "إشعار", en: "Notify", icon: Bell, color: "#f59e0b" },
   route: { ar: "تمرير لجهة", en: "Route to Authority", icon: Route, color: "#8b5cf6" },
   save_evidence: { ar: "حفظ دليل", en: "Save Evidence", icon: Save, color: "#10b981" },
   change_status: { ar: "تغيير الحالة", en: "Change Status", icon: RefreshCw, color: "#f59e0b" },

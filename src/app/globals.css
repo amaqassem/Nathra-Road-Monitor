@@ -44,76 +44,77 @@
 }
 
 :root {
-  --radius: 0.75rem;
-  /* أبيض مائل للبرود */
-  --background: oklch(0.985 0.004 230);
-  --foreground: oklch(0.21 0.02 240);
+  --radius: 0.875rem;
+  /* Light: أبيض دافئ مع كهرماني */
+  --background: oklch(0.98 0.004 60);
+  --foreground: oklch(0.2 0.015 280);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.02 240);
+  --card-foreground: oklch(0.2 0.015 280);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.02 240);
-  /* سماوي/سيان عميق */
-  --primary: oklch(0.55 0.14 210);
-  --primary-foreground: oklch(0.99 0.005 210);
-  --secondary: oklch(0.95 0.01 230);
-  --secondary-foreground: oklch(0.3 0.02 240);
-  --muted: oklch(0.96 0.006 230);
-  --muted-foreground: oklch(0.5 0.015 235);
-  --accent: oklch(0.93 0.02 210);
-  --accent-foreground: oklch(0.35 0.05 215);
+  --popover-foreground: oklch(0.2 0.015 280);
+  /* كهرماني/ذهبي رئيسي */
+  --primary: oklch(0.68 0.16 55);
+  --primary-foreground: oklch(0.15 0.02 50);
+  --secondary: oklch(0.95 0.01 60);
+  --secondary-foreground: oklch(0.3 0.02 55);
+  --muted: oklch(0.96 0.005 60);
+  --muted-foreground: oklch(0.5 0.015 55);
+  --accent: oklch(0.93 0.02 55);
+  --accent-foreground: oklch(0.35 0.05 50);
   --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.9 0.008 230);
-  --input: oklch(0.92 0.008 230);
-  --ring: oklch(0.55 0.14 210);
-  /* لوحة الرسوم: سيان، أزرق، بنفسجي، كهرماني، أحمر */
-  --chart-1: oklch(0.6 0.14 210);
-  --chart-2: oklch(0.55 0.13 260);
-  --chart-3: oklch(0.62 0.18 290);
-  --chart-4: oklch(0.78 0.14 75);
+  --border: oklch(0.9 0.006 55);
+  --input: oklch(0.92 0.006 55);
+  --ring: oklch(0.68 0.16 55);
+  /* لوحة الرسوم */
+  --chart-1: oklch(0.68 0.16 55);
+  --chart-2: oklch(0.6 0.14 200);
+  --chart-3: oklch(0.65 0.18 290);
+  --chart-4: oklch(0.7 0.15 150);
   --chart-5: oklch(0.62 0.22 25);
-  --sidebar: oklch(0.99 0.004 230);
-  --sidebar-foreground: oklch(0.21 0.02 240);
-  --sidebar-primary: oklch(0.55 0.14 210);
-  --sidebar-primary-foreground: oklch(0.99 0.005 210);
-  --sidebar-accent: oklch(0.95 0.01 230);
-  --sidebar-accent-foreground: oklch(0.3 0.02 240);
-  --sidebar-border: oklch(0.9 0.008 230);
-  --sidebar-ring: oklch(0.55 0.14 210);
+  --sidebar: oklch(0.97 0.005 55);
+  --sidebar-foreground: oklch(0.2 0.015 280);
+  --sidebar-primary: oklch(0.68 0.16 55);
+  --sidebar-primary-foreground: oklch(0.15 0.02 50);
+  --sidebar-accent: oklch(0.95 0.01 60);
+  --sidebar-accent-foreground: oklch(0.3 0.02 55);
+  --sidebar-border: oklch(0.9 0.006 55);
+  --sidebar-ring: oklch(0.68 0.16 55);
 }
 
 .dark {
-  /* سلايت/كحلي عميق — مركز قيادة */
-  --background: oklch(0.17 0.015 245);
-  --foreground: oklch(0.97 0.005 220);
-  --card: oklch(0.22 0.018 245);
-  --card-foreground: oklch(0.97 0.005 220);
-  --popover: oklch(0.22 0.018 245);
-  --popover-foreground: oklch(0.97 0.005 220);
-  --primary: oklch(0.72 0.14 200);
-  --primary-foreground: oklch(0.16 0.02 245);
-  --secondary: oklch(0.28 0.015 245);
-  --secondary-foreground: oklch(0.97 0.005 220);
-  --muted: oklch(0.27 0.015 245);
-  --muted-foreground: oklch(0.7 0.012 230);
-  --accent: oklch(0.3 0.02 220);
-  --accent-foreground: oklch(0.95 0.02 210);
-  --destructive: oklch(0.7 0.19 22);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.72 0.14 200);
-  --chart-1: oklch(0.72 0.14 200);
-  --chart-2: oklch(0.68 0.13 260);
-  --chart-3: oklch(0.72 0.18 290);
-  --chart-4: oklch(0.8 0.14 75);
-  --chart-5: oklch(0.72 0.2 25);
-  --sidebar: oklch(0.2 0.015 245);
-  --sidebar-foreground: oklch(0.97 0.005 220);
-  --sidebar-primary: oklch(0.72 0.14 200);
-  --sidebar-primary-foreground: oklch(0.16 0.02 245);
-  --sidebar-accent: oklch(0.27 0.015 245);
-  --sidebar-accent-foreground: oklch(0.97 0.005 220);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.72 0.14 200);
+  /* Midnight Navy — كحلي عميق */
+  --background: oklch(0.14 0.015 265);
+  --foreground: oklch(0.96 0.005 60);
+  --card: oklch(0.18 0.016 265);
+  --card-foreground: oklch(0.96 0.005 60);
+  --popover: oklch(0.2 0.016 265);
+  --popover-foreground: oklch(0.96 0.005 60);
+  /* كهرماني ذهبي متوهج */
+  --primary: oklch(0.75 0.16 60);
+  --primary-foreground: oklch(0.13 0.02 50);
+  --secondary: oklch(0.24 0.015 265);
+  --secondary-foreground: oklch(0.96 0.005 60);
+  --muted: oklch(0.23 0.013 265);
+  --muted-foreground: oklch(0.68 0.012 260);
+  --accent: oklch(0.26 0.02 55);
+  --accent-foreground: oklch(0.92 0.03 55);
+  --destructive: oklch(0.68 0.2 22);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: oklch(0.75 0.16 60);
+  --chart-1: oklch(0.75 0.16 60);
+  --chart-2: oklch(0.65 0.14 200);
+  --chart-3: oklch(0.7 0.18 290);
+  --chart-4: oklch(0.72 0.15 150);
+  --chart-5: oklch(0.7 0.2 25);
+  --sidebar: oklch(0.16 0.015 265);
+  --sidebar-foreground: oklch(0.96 0.005 60);
+  --sidebar-primary: oklch(0.75 0.16 60);
+  --sidebar-primary-foreground: oklch(0.13 0.02 50);
+  --sidebar-accent: oklch(0.23 0.013 265);
+  --sidebar-accent-foreground: oklch(0.96 0.005 60);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.75 0.16 60);
 }
 
 @layer base {
@@ -129,48 +130,46 @@
   }
 }
 
-/* شريط التمرير المخصص */
-.custom-scroll::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-.custom-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
+/* شريط التمرير */
+.custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+.custom-scroll::-webkit-scrollbar-track { background: transparent; }
 .custom-scroll::-webkit-scrollbar-thumb {
   background: var(--muted-foreground);
-  opacity: 0.3;
+  opacity: 0.25;
   border-radius: 3px;
 }
-.custom-scroll::-webkit-scrollbar-thumb:hover {
-  background: var(--primary);
-}
+.custom-scroll::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-/* خلفية شبكة مركز القيادة */
+/* خلفية شبكية مركز العمليات */
 .grid-bg {
   background-image:
-    linear-gradient(oklch(0.55 0.14 210 / 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(0.55 0.14 210 / 0.05) 1px, transparent 1px);
-  background-size: 32px 32px;
+    linear-gradient(oklch(0.75 0.16 60 / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.75 0.16 60 / 0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
 }
 
-/* تدرج سماوي سيان */
+/* تدرج كهرماني رئيسي */
 .gradient-nathra {
-  background: linear-gradient(135deg, oklch(0.55 0.14 210) 0%, oklch(0.5 0.13 235) 50%, oklch(0.45 0.12 255) 100%);
+  background: linear-gradient(135deg, oklch(0.7 0.16 55) 0%, oklch(0.65 0.15 45) 50%, oklch(0.55 0.13 35) 100%);
 }
 
 .gradient-nathra-soft {
-  background: linear-gradient(135deg, oklch(0.55 0.14 210 / 0.08) 0%, oklch(0.62 0.18 290 / 0.05) 100%);
+  background: linear-gradient(135deg, oklch(0.75 0.16 60 / 0.08) 0%, oklch(0.65 0.14 200 / 0.04) 100%);
+}
+
+/* تدرج كحلي للهيدر */
+.gradient-midnight {
+  background: linear-gradient(135deg, oklch(0.14 0.02 270) 0%, oklch(0.18 0.018 265) 50%, oklch(0.16 0.015 260) 100%);
 }
 
 /* تأثير زجاجي */
 .glass {
-  background: oklch(1 0 0 / 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: oklch(1 0 0 / 0.65);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
 }
 .dark .glass {
-  background: oklch(0.22 0.018 245 / 0.7);
+  background: oklch(0.18 0.016 265 / 0.7);
 }
 
 /* خط عربي */
@@ -180,36 +179,62 @@
 
 /* أنيميشن */
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-up {
-  animation: fade-up 0.4s ease-out;
+  animation: fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in {
+  animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* نبض التنبيه الحرج */
 @keyframes alert-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.58 0.22 27 / 0.5); }
-  50% { box-shadow: 0 0 0 6px oklch(0.58 0.22 27 / 0); }
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.68 0.2 22 / 0.4); }
+  50% { box-shadow: 0 0 0 8px oklch(0.68 0.2 22 / 0); }
 }
-.alert-pulse {
-  animation: alert-pulse 1.8s infinite;
-}
+.alert-pulse { animation: alert-pulse 2s infinite; }
 
-/* مسح البث (scan line) */
+/* مسح البث */
 @keyframes scan {
   0% { transform: translateY(-100%); }
   100% { transform: translateY(100%); }
 }
-.scan-line {
-  animation: scan 3s linear infinite;
-}
+.scan-line { animation: scan 3.5s linear infinite; }
 
 /* وميض REC */
 @keyframes rec-blink {
   0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0.3; }
+  51%, 100% { opacity: 0.25; }
 }
-.rec-blink {
-  animation: rec-blink 1.5s infinite;
+.rec-blink { animation: rec-blink 1.4s infinite; }
+
+/* توهج كهرماني */
+.glow-amber {
+  box-shadow: 0 0 20px oklch(0.75 0.16 60 / 0.15);
 }
+.dark .glow-amber {
+  box-shadow: 0 0 24px oklch(0.75 0.16 60 / 0.2);
+}
+
+/* بطاقة بتأثير hover */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px oklch(0 0 0 / 0.08);
+}
+.dark .card-hover:hover {
+  box-shadow: 0 8px 24px oklch(0 0 0 / 0.3);
+}
+
+/* شريط تمرير رفيع للـ nav */
+.nav-scroll::-webkit-scrollbar { display: none; }
+.nav-scroll { -ms-overflow-style: none; scrollbar-width: none; }

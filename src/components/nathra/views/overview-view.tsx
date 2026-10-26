@@ -172,12 +172,12 @@ export function OverviewView() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
-        <KpiCard icon={Cctv} label={t("kpi.cameras")} value={formatNumber(kpi.onlineCameras, lang)} unit={`/ ${formatNumber(kpi.totalCameras, lang)}`} accent="#06b6d4" trend="up" trendValue={`${kpi.uptime}%`} delay={0} />
+        <KpiCard icon={Cctv} label={t("kpi.cameras")} value={formatNumber(kpi.onlineCameras, lang)} unit={`/ ${formatNumber(kpi.totalCameras, lang)}`} accent="#10b981" trend="up" trendValue={`${kpi.uptime}%`} delay={0} />
         <KpiCard icon={Siren} label={t("kpi.alerts")} value={formatNumber(kpi.activeAlerts, lang)} unit={t("kpi.alertsUnit")} accent="#dc2626" trend="down" trendValue={`-${Math.max(1, Math.floor(kpi.activeAlerts * 0.15))}`} delay={60} />
         <KpiCard icon={Activity} label={t("kpi.events")} value={formatNumber(kpi.eventsToday, lang)} unit={t("kpi.eventsUnit")} accent="#8b5cf6" trend="up" trendValue="+12%" delay={120} />
         <KpiCard icon={Target} label={t("kpi.accuracy")} value={`${kpi.avgConfidence}%`} accent="#10b981" trend="up" trendValue="+0.4%" delay={180} />
         <KpiCard icon={Building2} label={t("kpi.sites")} value={formatNumber(kpi.totalSites, lang)} unit={t("kpi.sitesUnit")} accent="#0ea5e9" trend="neutral" trendValue={isAr ? "مستقر" : "stable"} delay={240} />
-        <KpiCard icon={Power} label={t("kpi.uptime")} value={`${kpi.uptime}%`} accent="#f59e0b" trend="up" trendValue={isAr ? "ممتاز" : "excellent"} delay={300} />
+        <KpiCard icon={Power} label={t("kpi.uptime")} value={`${kpi.uptime}%`} accent="#10b981" trend="up" trendValue={isAr ? "ممتاز" : "excellent"} delay={300} />
       </div>
 
       {/* شريط الأحداث اللحظي + المعالجة التلقائية */}
@@ -202,8 +202,8 @@ export function OverviewView() {
             <AreaChart data={hourlyTrend} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="eventsGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="#06b6d4" stopOpacity={0} />
+                  <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="alertsGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#dc2626" stopOpacity={0.25} />
@@ -214,7 +214,7 @@ export function OverviewView() {
               <XAxis dataKey="hour" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />
-              <Area type="monotone" dataKey="events" stroke="#06b6d4" strokeWidth={2.5} fill="url(#eventsGrad)" />
+              <Area type="monotone" dataKey="events" stroke="#f59e0b" strokeWidth={2.5} fill="url(#eventsGrad)" />
               <Area type="monotone" dataKey="alerts" stroke="#dc2626" strokeWidth={2} fill="url(#alertsGrad)" />
             </AreaChart>
           </ResponsiveContainer>
@@ -258,7 +258,7 @@ export function OverviewView() {
               <XAxis type="number" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
               <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} width={90} />
               <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "var(--muted)" }} />
-              <Bar dataKey="value" radius={[0, 6, 6, 0]} fill="#06b6d4" barSize={16} />
+              <Bar dataKey="value" radius={[0, 6, 6, 0]} fill="#f59e0b" barSize={16} />
             </BarChart>
           </ResponsiveContainer>
         </Card>

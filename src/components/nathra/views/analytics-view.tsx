@@ -33,7 +33,7 @@ function heatColor(value: number, max: number): string {
   if (ratio > 0.6) return "#ea580c"
   if (ratio > 0.4) return "#f59e0b"
   if (ratio > 0.2) return "#84cc16"
-  if (ratio > 0) return "#06b6d4"
+  if (ratio > 0) return "#f59e0b"
   return "var(--muted)"
 }
 
@@ -71,7 +71,7 @@ export function AnalyticsView() {
 
   const healthMetrics = [
     { label: t("analytics.nationalIndex"), value: Math.min(99, Math.max(40, safetyIndex)), max: 100, icon: ShieldCheck, color: scoreColor(safetyIndex), desc: t("analytics.nationalIndexDesc") },
-    { label: t("analytics.coverage"), value: coverage, max: 100, icon: Activity, color: "#06b6d4", desc: t("analytics.coverageDesc") },
+    { label: t("analytics.coverage"), value: coverage, max: 100, icon: Activity, color: "#f59e0b", desc: t("analytics.coverageDesc") },
     { label: t("analytics.falseAlarmRate"), value: falseAlarmRate, max: 100, icon: TrendingUp, color: "#8b5cf6", desc: t("analytics.falseAlarmDesc") },
   ]
 
@@ -154,7 +154,7 @@ export function AnalyticsView() {
           </div>
           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
             <span>{isAr ? "منخفض" : "Low"}</span>
-            {["#06b6d4", "#84cc16", "#f59e0b", "#ea580c", "#dc2626"].map((c) => (
+            {["#f59e0b", "#84cc16", "#f59e0b", "#ea580c", "#dc2626"].map((c) => (
               <span key={c} className="h-3 w-4 rounded-sm" style={{ backgroundColor: c }} />
             ))}
             <span>{isAr ? "مرتفع" : "High"}</span>
@@ -201,7 +201,7 @@ export function AnalyticsView() {
               <PolarGrid stroke="var(--border)" />
               <PolarAngleAxis dataKey="site" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} />
               <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} />
-              <Radar name="Safety" dataKey="score" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.35} strokeWidth={2} />
+              <Radar name="Safety" dataKey="score" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.35} strokeWidth={2} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />
             </RadarChart>
           </ResponsiveContainer>
@@ -220,7 +220,7 @@ export function AnalyticsView() {
               <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "var(--muted)" }} />
               <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={26}>
                 {data.alertTypeDist.map((_, i) => (
-                  <Cell key={i} fill={["#06b6d4", "#8b5cf6", "#0ea5e9", "#f59e0b", "#dc2626", "#10b981", "#ea580c"][i % 7]} />
+                  <Cell key={i} fill={["#f59e0b", "#8b5cf6", "#0ea5e9", "#f59e0b", "#dc2626", "#10b981", "#ea580c"][i % 7]} />
                 ))}
               </Bar>
             </BarChart>
@@ -243,7 +243,7 @@ export function AnalyticsView() {
               <Tooltip contentStyle={TOOLTIP_STYLE} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Line type="monotone" dataKey="alerts" stroke="#dc2626" strokeWidth={2.5} dot={{ r: 3 }} name={isAr ? "تنبيهات" : "Alerts"} />
-              <Line type="monotone" dataKey="confirmed" stroke="#06b6d4" strokeWidth={2.5} dot={{ r: 3 }} name={isAr ? "مؤكدة" : "Confirmed"} />
+              <Line type="monotone" dataKey="confirmed" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3 }} name={isAr ? "مؤكدة" : "Confirmed"} />
             </LineChart>
           </ResponsiveContainer>
         </Card>

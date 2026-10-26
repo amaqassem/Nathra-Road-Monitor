@@ -83,11 +83,11 @@ export default function Home() {
       <AppHeader />
 
       <nav className="sticky top-0 z-40 glass border-b border-border">
-        <div className="container mx-auto max-w-7xl px-4">
-          <div className="flex items-center gap-1 overflow-x-auto custom-scroll py-2">
+        <div className="container mx-auto max-w-7xl px-2 md:px-4">
+          <div className="flex items-center gap-0.5 overflow-x-auto nav-scroll py-1.5">
             {groups.map((g, gi) => (
-              <div key={g} className="flex items-center gap-1">
-                {gi > 0 && <div className="h-5 w-px bg-border mx-1 shrink-0" />}
+              <div key={g} className="flex items-center gap-0.5">
+                {gi > 0 && <div className="h-4 w-px bg-border mx-1 shrink-0" />}
                 {groupTabs(g).map((tab) => {
                   const Icon = tab.icon
                   const active = activeTab === tab.id
@@ -95,21 +95,22 @@ export default function Home() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`relative flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors whitespace-nowrap ${
+                      title={tab.label}
+                      className={`relative flex items-center gap-1.5 rounded-lg px-2.5 md:px-3 py-2 text-[13px] font-semibold transition-all whitespace-nowrap ${
                         active
                           ? "text-primary-foreground"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                          : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
                       }`}
                     >
                       {active && (
                         <motion.div
                           layoutId="activeTab"
-                          className="absolute inset-0 rounded-lg gradient-nathra"
+                          className="absolute inset-0 rounded-lg gradient-nathra glow-amber"
                           transition={{ type: "spring", stiffness: 380, damping: 30 }}
                         />
                       )}
-                      <Icon className="relative z-10 h-4 w-4" />
-                      <span className="relative z-10">{tab.label}</span>
+                      <Icon className={`relative z-10 h-4 w-4 shrink-0 ${active ? "" : "opacity-70"}`} />
+                      <span className="relative z-10 hidden sm:inline">{tab.label}</span>
                     </button>
                   )
                 })}

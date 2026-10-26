@@ -26,7 +26,7 @@ interface LiveCameraFeedProps {
   className?: string
 }
 
-const DETECTION_COLORS = ["#06b6d4", "#8b5cf6", "#10b981", "#f59e0b", "#ec4899"]
+const DETECTION_COLORS = ["#f59e0b", "#8b5cf6", "#10b981", "#f59e0b", "#ec4899"]
 
 // مولّد ثابت لكل كاميرا (كشف متناسق)
 function seededRandom(seed: string, i: number): number {

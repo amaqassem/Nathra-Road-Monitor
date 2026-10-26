@@ -9,7 +9,7 @@ import { useI18n } from "../lib/i18n"
 
 const METRIC_META: Record<string, { icon: any; ar: string; en: string; color: string; max?: number; invert?: boolean }> = {
   camera_online: { icon: Server, ar: "كاميرات نشطة", en: "Cameras Online", color: "#10b981" },
-  stream_fps: { icon: Activity, ar: "معدل الإطارات", en: "Stream FPS", color: "#06b6d4", max: 60 },
+  stream_fps: { icon: Activity, ar: "معدل الإطارات", en: "Stream FPS", color: "#f59e0b", max: 60 },
   network_latency: { icon: Wifi, ar: "زمن استجابة الشبكة", en: "Network Latency", color: "#8b5cf6", max: 200, invert: true },
   storage_usage: { icon: HardDrive, ar: "استخدام التخزين", en: "Storage Usage", color: "#f59e0b", max: 100 },
   ai_latency: { icon: Cpu, ar: "زمن معالجة AI", en: "AI Processing Latency", color: "#ec4899", max: 1000, invert: true },
@@ -67,7 +67,7 @@ export function HealthView() {
       {/* مقاييس النظام */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {data.metrics.map((m: any) => {
-          const meta = METRIC_META[m.metric] || { icon: Activity, ar: m.metric, en: m.metric, color: "#06b6d4" }
+          const meta = METRIC_META[m.metric] || { icon: Activity, ar: m.metric, en: m.metric, color: "#f59e0b" }
           const Icon = meta.icon
           const pct = meta.max ? Math.min(100, (m.value / meta.max) * 100) : (m.status === "ok" ? 75 : m.status === "warning" ? 50 : 25)
           return (
