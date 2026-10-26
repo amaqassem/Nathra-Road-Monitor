@@ -8,9 +8,7 @@ export interface AIStatus {
   message: string
 }
 
-// فحص توفر خدمة AI
 export async function getAIStatus(): Promise<AIStatus> {
-  // 1. فحص توفر Google Gemini API Key
   if (process.env.GEMINI_API_KEY) {
     return {
       available: true,
@@ -19,7 +17,6 @@ export async function getAIStatus(): Promise<AIStatus> {
     }
   }
 
-  // 2. جرّب z-ai-web-dev-sdk
   try {
     const ZAIModule = await import('z-ai-web-dev-sdk')
     const ZAI = (ZAIModule as any).default
@@ -27,11 +24,8 @@ export async function getAIStatus(): Promise<AIStatus> {
     if (zai) {
       return { available: true, provider: 'zai-sdk', message: 'Z.ai SDK active (local environment)' }
     }
-  } catch (e) {
-    // SDK غير متوفر
-  }
+  } catch (e) {}
 
-  // 3. الاتصال المباشر لـ ZAI
   if (process.env.ZAI_API_KEY) {
     return {
       available: true,
@@ -40,7 +34,6 @@ export async function getAIStatus(): Promise<AIStatus> {
     }
   }
 
-  // 4. fallback محلي
   return {
     available: false,
     provider: 'local-fallback',
@@ -48,7 +41,6 @@ export async function getAIStatus(): Promise<AIStatus> {
   }
 }
 
-// إنشاء عميل أو تحديد الموفر
 async function getAIClient() {
   if (process.env.GEMINI_API_KEY) {
     return { type: 'gemini' as const, apiKey: process.env.GEMINI_API_KEY }
@@ -87,7 +79,6 @@ export interface ChatMessage {
   content: string
 }
 
-// تحليل صورة بالرؤية (يدعم Gemini عبر Google Generative Language REST API)
 export async function analyzeImage(
   messages: VisionMessage[],
   options: { thinking?: { type: string } } = {}
@@ -98,15 +89,14 @@ export async function analyzeImage(
     throw new Error('AI_UNAVAILABLE')
   }
 
-  // إذا كان الموفر هو Google Gemini
   if (client.type === 'gemini') {
     const geminiApiKey = client.apiKey
-    // تم التحديث إلى gemini-2.5-flash لتجنب خطأ 404
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`
+    // استخدام النموذج القياسي المدعوم رسمياً في الـ API
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`
     
     let promptText = "Analyze this traffic monitoring image for violations:"
     let base64Image = ""
-    let mimeType = "image/jpeg" // القيمة الافتراضية الآمنة
+    let mimeType = "image/jpeg"
 
     for (const msg of messages) {
       if (typeof msg.content === 'string') {
@@ -120,7 +110,7 @@ export async function analyzeImage(
             if (urlData.startsWith('data:image')) {
               const matches = urlData.match(/^data:([^;]+);base64,(.+)$/)
               if (matches) {
-                mimeType = matches[1] // التقاط نوع الصورة الحقيقي (jpeg, png, webp)
+                mimeType = matches[1]
                 base64Image = matches[2]
               }
             } else if (urlData.startsWith('http')) {
@@ -168,7 +158,6 @@ export async function analyzeImage(
     return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No analysis generated.'
   }
 
-  // دعم الـ SDK أو الاتصال المباشر القديم لـ Z.ai
   if (client.type === 'sdk') {
     const response = await client.client.chat.completions.createVision({
       messages: messages as any,
@@ -177,7 +166,6 @@ export async function analyzeImage(
     return response.choices[0]?.message?.content || ''
   }
 
-  // اتصال مباشر Z.ai
   const { baseUrl, apiKey } = client.config
   const response = await fetch(`${baseUrl}/chat/completions/vision`, {
     method: 'POST',
@@ -191,7 +179,6 @@ export async function analyzeImage(
   return data.choices[0]?.message?.content || ''
 }
 
-// محادثة نصية
 export async function chatCompletion(
   messages: ChatMessage[],
   options: { thinking?: { type: string } } = {}
@@ -200,8 +187,7 @@ export async function chatCompletion(
   if (!client) throw new Error('AI_UNAVAILABLE')
 
   if (client.type === 'gemini') {
-    // تم التحديث إلى gemini-2.5-flash للتوافق
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${client.apiKey}`
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${client.apiKey}`
     const formattedContents = messages.map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }]
@@ -228,14 +214,9 @@ export async function chatCompletion(
   return ''
 }
 
-// التحليل المحلي الاحتياطي
 export function localFallbackAnalysis(cameraZone: string, cameraModel: string) {
-  const isIntersection = cameraZone.includes('تقاطع') || cameraZone.includes('Intersection')
-  const isHighway = cameraZone.includes('سريع') || cameraZone.includes('Highway')
-  
   const rand = Math.random()
   let hasViolation = rand > 0.55
-  let violationType = hasViolation ? 'speeding' : 'none'
   let summary = hasViolation ? 'مركبة تتجاوز السرعة المحددة' : 'مرور طبيعي على الطريق'
 
   return {
