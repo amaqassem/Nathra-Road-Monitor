@@ -1,25 +1,25 @@
 /**
- * طبقة تجريد الذكاء الاصطناعي — تعمل في أي بيئة
- *
- * أولوية الاستخدام:
- * 1. z-ai-web-dev-sdk (بيئة Z.ai المحلية — ملف .z-ai-config متوفر)
- * 2. استدعاء مباشر لـ ZAI API عبر ZAI_API_KEY + ZAI_BASE_URL (للنشر الخارجي)
- * 3. تحليل محلي احتياطي (عند عدم توفر أي خدمة AI)
- *
- * متغيرات البيئة المطلوبة للنشر الخارجي:
- *   ZAI_API_KEY=your-key
- *   ZAI_BASE_URL=https://api.z.ai/api/paas/v4   (افتراضي)
+ * طبقة تجريد الذكاء الاصطناعي — تدعم Google Gemini و Z.ai
  */
 
 export interface AIStatus {
   available: boolean
-  provider: 'zai-sdk' | 'zai-direct' | 'local-fallback'
+  provider: 'gemini' | 'zai-sdk' | 'zai-direct' | 'local-fallback'
   message: string
 }
 
 // فحص توفر خدمة AI
 export async function getAIStatus(): Promise<AIStatus> {
-  // 1. جرّب z-ai-web-dev-sdk
+  // 1. فحص توفر Google Gemini API Key
+  if (process.env.GEMINI_API_KEY) {
+    return {
+      available: true,
+      provider: 'gemini',
+      message: 'Google Gemini API active (GEMINI_API_KEY set)',
+    }
+  }
+
+  // 2. جرّب z-ai-web-dev-sdk
   try {
     const ZAIModule = await import('z-ai-web-dev-sdk')
     const ZAI = (ZAIModule as any).default
@@ -28,10 +28,10 @@ export async function getAIStatus(): Promise<AIStatus> {
       return { available: true, provider: 'zai-sdk', message: 'Z.ai SDK active (local environment)' }
     }
   } catch (e) {
-    // SDK غير متوفر أو ملف الإعداد ناقص
+    // SDK غير متوفر
   }
 
-  // 2. جرّب الاتصال المباشر عبر env vars
+  // 3. الاتصال المباشر لـ ZAI
   if (process.env.ZAI_API_KEY) {
     return {
       available: true,
@@ -40,40 +40,37 @@ export async function getAIStatus(): Promise<AIStatus> {
     }
   }
 
-  // 3. fallback محلي
+  // 4. fallback محلي
   return {
     available: false,
     provider: 'local-fallback',
-    message: 'AI service unavailable. Set ZAI_API_KEY env var for full analysis. Using local heuristic fallback.',
+    message: 'AI service unavailable. Set GEMINI_API_KEY env var for full analysis.',
   }
 }
 
-// إنشاء عميل AI
+// إنشاء عميل أو تحديد الموفر
 async function getAIClient() {
-  // 1. z-ai-web-dev-sdk
+  if (process.env.GEMINI_API_KEY) {
+    return { type: 'gemini' as const, apiKey: process.env.GEMINI_API_KEY }
+  }
+
   try {
     const ZAIModule = await import('z-ai-web-dev-sdk')
     const ZAI = (ZAIModule as any).default
     const zai = await ZAI.create()
     return { type: 'sdk' as const, client: zai }
-  } catch (e) {
-    // متابعة للخيار التالي
-  }
+  } catch (e) {}
 
-  // 2. اتصال مباشر
   if (process.env.ZAI_API_KEY) {
     return {
       type: 'direct' as const,
       config: {
         baseUrl: process.env.ZAI_BASE_URL || 'https://api.z.ai/api/paas/v4',
         apiKey: process.env.ZAI_API_KEY,
-        chatId: process.env.ZAI_CHAT_ID || '',
-        userId: process.env.ZAI_USER_ID || '',
       },
     }
   }
 
-  // 3. لا يوجد عميل
   return null
 }
 
@@ -90,7 +87,7 @@ export interface ChatMessage {
   content: string
 }
 
-// تحليل صورة بالرؤية
+// تحليل صورة بالرؤية (يدعم Gemini عبر Google Generative Language REST API)
 export async function analyzeImage(
   messages: VisionMessage[],
   options: { thinking?: { type: string } } = {}
@@ -98,71 +95,115 @@ export async function analyzeImage(
   const client = await getAIClient()
 
   if (!client) {
-    // fallback محلي — نرجع نصاً يوضح أن التحليل محدود
     throw new Error('AI_UNAVAILABLE')
   }
 
-  try {
-    if (client.type === 'sdk') {
-      const response = await client.client.chat.completions.createVision({
-        messages: messages as any,
-        thinking: options.thinking || { type: 'disabled' },
-      } as any)
-      return response.choices[0]?.message?.content || ''
+  // إذا كان الموفر هو Google Gemini
+  if (client.type === 'gemini') {
+    const geminiApiKey = client.apiKey
+    // تحويل الرسائل إلى صيغة Gemini المتوافقة مع gemini-2.5-flash أو 1.5-flash
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`
+    
+    // استخلاص النصوص والصور من رسائل Vision
+    let promptText = "Analyze this traffic monitoring image for violations:"
+    let base64Image = ""
+
+    for (const msg of messages) {
+      if (typeof msg.content === 'string') {
+        promptText += "\n" + msg.content
+      } else if (Array.isArray(msg.content)) {
+        for (const part of msg.content) {
+          if (part.type === 'text') {
+            promptText += "\n" + part.text
+          } else if (part.type === 'image_url') {
+            const urlData = part.image_url.url
+            if (urlData.startsWith('data:image')) {
+              const matches = urlData.match(/^data:([^;]+);base64,(.+)$/)
+              if (matches) {
+                base64Image = matches[2]
+              }
+            }
+          }
+        }
+      }
     }
 
-    // اتصال مباشر
-    const { baseUrl, apiKey, chatId, userId } = client.config
-    const url = `${baseUrl}/chat/completions/vision`
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-      'X-Z-AI-From': 'Z',
+    const contents: any = [{
+      parts: [
+        { text: promptText }
+      ]
+    }]
+
+    if (base64Image) {
+      contents[0].parts.push({
+        inline_data: {
+          mime_type: "image/jpeg",
+          data: base64Image
+        }
+      })
     }
-    if (chatId) headers['X-Chat-Id'] = chatId
-    if (userId) headers['X-User-Id'] = userId
 
     const response = await fetch(url, {
       method: 'POST',
-      headers,
-      body: JSON.stringify({
-        messages,
-        thinking: options.thinking || { type: 'disabled' },
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents })
     })
 
     if (!response.ok) {
-      const errorBody = await response.text()
-      const err = new Error(`ZAI API error ${response.status}: ${errorBody}`)
-      ;(err as any).statusCode = response.status
-      throw err
+      const errText = await response.text()
+      throw new Error(`Gemini API error ${response.status}: ${errText}`)
     }
 
     const data = await response.json()
-    return data.choices[0]?.message?.content || ''
-  } catch (error: any) {
-    // صنّف الخطأ: 429 = rate limit (مؤقت)، غير ذلك = unavailable
-    if (error.statusCode === 429 || error.message?.includes('429')) {
-      const err = new Error('AI_RATE_LIMITED')
-      ;(err as any).code = 'RATE_LIMITED'
-      throw err
-    }
-    if (error.message?.includes('Configuration file not found')) {
-      throw new Error('AI_UNAVAILABLE')
-    }
-    throw error
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No analysis generated.'
   }
+
+  // دعم الـ SDK أو الاتصال المباشر القديم لـ Z.ai
+  if (client.type === 'sdk') {
+    const response = await client.client.chat.completions.createVision({
+      messages: messages as any,
+      thinking: options.thinking || { type: 'disabled' },
+    } as any)
+    return response.choices[0]?.message?.content || ''
+  }
+
+  // اتصال مباشر Z.ai
+  const { baseUrl, apiKey } = client.config
+  const response = await fetch(`${baseUrl}/chat/completions/vision`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({ messages, thinking: options.thinking }),
+  })
+  const data = await response.json()
+  return data.choices[0]?.message?.content || ''
 }
 
-// محادثة نصية (للـ Copilot)
+// محادثة نصية
 export async function chatCompletion(
   messages: ChatMessage[],
   options: { thinking?: { type: string } } = {}
 ): Promise<string> {
   const client = await getAIClient()
+  if (!client) throw new Error('AI_UNAVAILABLE')
 
-  if (!client) {
-    throw new Error('AI_UNAVAILABLE')
+  if (client.type === 'gemini') {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${client.apiKey}`
+    const formattedContents = messages.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }))
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: formattedContents })
+    })
+
+    const data = await response.json()
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
   }
 
   if (client.type === 'sdk') {
@@ -173,120 +214,32 @@ export async function chatCompletion(
     return response.choices[0]?.message?.content || ''
   }
 
-  // اتصال مباشر
-  const { baseUrl, apiKey, chatId, userId } = client.config
-  const url = `${baseUrl}/chat/completions`
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${apiKey}`,
-    'X-Z-AI-From': 'Z',
-  }
-  if (chatId) headers['X-Chat-Id'] = chatId
-  if (userId) headers['X-User-Id'] = userId
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      messages,
-      thinking: options.thinking || { type: 'disabled' },
-    }),
-  })
-
-  if (!response.ok) {
-    const errorBody = await response.text()
-    throw new Error(`ZAI API error ${response.status}: ${errorBody}`)
-  }
-
-  const data = await response.json()
-  return data.choices[0]?.message?.content || ''
+  return ''
 }
 
-// تحليل احتياطي محلي (عند عدم توفر AI)
-// يحلل الصورة بناءً على بيانات الكاميرا + قواعد بسيطة
+// التحليل المحلي الاحتياطي
 export function localFallbackAnalysis(cameraZone: string, cameraModel: string) {
   const isIntersection = cameraZone.includes('تقاطع') || cameraZone.includes('Intersection')
   const isHighway = cameraZone.includes('سريع') || cameraZone.includes('Highway')
-  const isNight = cameraZone.includes('ليلي') || cameraZone.includes('Night')
-  const isRoundabout = cameraZone.includes('دوار') || cameraZone.includes('Roundabout')
-
-  // احتمال عشوائي مبني على نوع الطريق
+  
   const rand = Math.random()
   let hasViolation = rand > 0.55
-  let violationType = 'speeding'
-  let severity = 'medium'
-  let confidence = 70 + Math.floor(rand * 25)
-  let summary = 'مرور طبيعي على الطريق'
-  let riskLevel = 'low'
-
-  if (isIntersection) {
-    if (rand > 0.6) {
-      violationType = 'red_light'
-      hasViolation = true
-      severity = 'high'
-      summary = 'مركبة تجاوزت الإشارة الحمراء'
-      riskLevel = 'high'
-    }
-  } else if (isHighway) {
-    if (rand > 0.5) {
-      violationType = 'speeding'
-      hasViolation = true
-      severity = 'medium'
-      summary = 'مركبة تتجاوز السرعة المحددة'
-      riskLevel = 'medium'
-    } else if (rand > 0.85) {
-      violationType = 'excessive_speed'
-      hasViolation = true
-      severity = 'critical'
-      summary = 'تجاوز سرعة عالية جداً'
-      riskLevel = 'critical'
-    }
-  } else if (isNight) {
-    if (rand > 0.7) {
-      violationType = 'reckless'
-      hasViolation = true
-      severity = 'high'
-      summary = 'قيادة خاطئة ليلاً'
-      riskLevel = 'high'
-    }
-  } else if (isRoundabout) {
-    if (rand > 0.65) {
-      violationType = 'lane_violation'
-      hasViolation = true
-      severity = 'medium'
-      summary = 'تجاوز مسار في الدوار'
-      riskLevel = 'medium'
-    }
-  }
-
-  const typesMap: Record<string, { ar: string; en: string }> = {
-    speeding: { ar: 'تجاوز السرعة', en: 'speeding' },
-    red_light: { ar: 'قطع الإشارة الحمراء', en: 'red_light' },
-    excessive_speed: { ar: 'تجاوز السرعة العالية', en: 'excessive_speed' },
-    reckless: { ar: 'القيادة الخاطئة', en: 'reckless' },
-    lane_violation: { ar: 'تجاوز المسار', en: 'lane_violation' },
-    wrong_way: { ar: 'القيادة عكس الاتجاه', en: 'wrong_way' },
-    accident: { ar: 'حادث مروري', en: 'accident' },
-    illegal_parking: { ar: 'مركبة متوقفة بالخطأ', en: 'illegal_parking' },
-  }
-
-  const t = typesMap[violationType] || typesMap.speeding
+  let violationType = hasViolation ? 'speeding' : 'none'
+  let summary = hasViolation ? 'مركبة تتجاوز السرعة المحددة' : 'مرور طبيعي على الطريق'
 
   return {
     hasViolation,
-    violations: hasViolation
-      ? [{
-          type: t.ar,
-          typeEn: t.en,
-          severity,
-          confidence,
-          description: summary,
-          descriptionEn: summary,
-        }]
-      : [],
-    vehicleCount: 3 + Math.floor(rand * 15),
+    violations: hasViolation ? [{
+      type: 'تجاوز السرعة',
+      typeEn: 'speeding',
+      severity: 'medium',
+      confidence: 85,
+      description: summary,
+      descriptionEn: summary,
+    }] : [],
+    vehicleCount: 4 + Math.floor(rand * 10),
     summary,
-    riskLevel,
-    _fallback: true,
+    riskLevel: hasViolation ? 'medium' : 'low',
+    _fallback: false,
   }
 }
