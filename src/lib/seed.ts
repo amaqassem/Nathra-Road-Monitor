@@ -50,7 +50,6 @@ const ZONES = [
 
 const RESOLUTIONS = ["4K", "1080p", "1080p", "720p"]
 
-<<<<<<< HEAD
 const ALL_IMAGES = [
   "/cameras/road-highway.jpg",
   "/cameras/road-intersection.jpg",
@@ -60,35 +59,6 @@ const ALL_IMAGES = [
   "/cameras/road-night.jpg",
   "/cameras/road-tunnel.jpg",
   "/cameras/road-roundabout.jpg",
-=======
-// خريطة نوع الموقع → صورة المشهد
-const SITE_IMAGE_MAP: Record<string, string> = {
-  "صناعي": "/cameras/scene-industrial.jpg",
-  "تجزئة": "/cameras/scene-retail.jpg",
-  "مدينة ذكية": "/cameras/scene-airport.jpg",
-  "رعاية صحية": "/cameras/scene-office.jpg",
-}
-// بدائل للتنويع حسب المدينة/الاسم
-const NAME_IMAGE_MAP: Record<string, string> = {
-  "مول العرب": "/cameras/scene-mall.jpg",
-  "حي العليا التجاري": "/cameras/scene-mall.jpg",
-  "ميناء الملك عبدالله": "/cameras/scene-warehouse.jpg",
-  "مجمع الملك عبدالله الصناعي": "/cameras/scene-warehouse.jpg",
-  "مشروع نيوم": "/cameras/scene-parking.jpg",
-  "مطار الملك خالد الدولي": "/cameras/scene-airport.jpg",
-  "البحر الأحمر العالمي": "/cameras/scene-perimeter.jpg",
-  "مدينة الملك عبدالعزيز الطبية": "/cameras/scene-office.jpg",
-}
-const ALL_IMAGES = [
-  "/cameras/scene-mall.jpg",
-  "/cameras/scene-parking.jpg",
-  "/cameras/scene-warehouse.jpg",
-  "/cameras/scene-airport.jpg",
-  "/cameras/scene-office.jpg",
-  "/cameras/scene-industrial.jpg",
-  "/cameras/scene-retail.jpg",
-  "/cameras/scene-perimeter.jpg",
->>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
 ]
 
 function rand(min: number, max: number) {
@@ -172,13 +142,8 @@ export async function seedDatabase() {
       const zone = pick(ZONES)
       const hasEvents = status === "online"
       const events24h = hasEvents ? Math.floor(rand(0, 28)) : 0
-<<<<<<< HEAD
       // اختيار صورة المشهد: صورة الطريق المحددة + تنويع
       const imagePath = site.image || ALL_IMAGES[(camIdx - 1) % ALL_IMAGES.length]
-=======
-      // اختيار صورة المشهد: الاسم أولاً ثم النوع ثم تنويع
-      let imagePath = NAME_IMAGE_MAP[site.name] || SITE_IMAGE_MAP[site.type] || ALL_IMAGES[(camIdx - 1) % ALL_IMAGES.length]
->>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
       await db.camera.create({
         data: {
           name: `كاميرا ${camIdx}`,
