@@ -12,7 +12,7 @@ datasource db {
 
 // المواقع المراقبة (المنشآت/المبانئ)
 model Site {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String
   nameEn    String
   city      String
@@ -24,102 +24,90 @@ model Site {
   cameras   Camera[]
   alerts    Alert[]
   incidents Incident[]
-  createdAt DateTime @default(now())
+  createdAt DateTime   @default(now())
 }
 
 // الكاميرات
 model Camera {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   name        String
   nameEn      String
   siteId      String
-  site        Site     @relation(fields: [siteId], references: [id])
-  status      String   // online / offline / maintenance
+  site        Site       @relation(fields: [siteId], references: [id])
+  status      String     // online / offline / maintenance
   resolution  String
   fps         Int
   model       String
   modelEn     String
   zone        String
   zoneEn      String
-<<<<<<< HEAD
-  imagePath   String
+  imagePath   String     // مسار صورة المشهد الحقيقي
   // بيانات البث الفعلي (تُخزّن مشفرة على الخادم فقط)
-  streamType  String?  // rtsp / onvif / hls / webrtc / demo
-  streamUrl   String?  // URL البث (يُخزّن على الخادم فقط)
-  credentials String?  // بيانات الاعتماد (مشفر)
-  isLive      Boolean  @default(false) // هل البث حقيقي أم Demo
-  events24h   Int      @default(0)
-=======
-  imagePath   String   // مسار صورة المشهد الحقيقي
-  events24h   Int      // عدد أحداث آخر 24 ساعة
->>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
+  streamType  String?    // rtsp / onvif / hls / webrtc / demo
+  streamUrl   String?    // URL البث (يُخزّن على الخادم فقط)
+  credentials String?    // بيانات الاعتماد (مشفر)
+  isLive      Boolean    @default(false) // هل البث حقيقي أم Demo
+  events24h   Int        @default(0)     // عدد أحداث آخر 24 ساعة
   lastEventAt DateTime?
   alerts      Alert[]
   incidents   Incident[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 // التنبيهات (أحداث مكتشفة — قد تتحول إلى حوادث)
 model Alert {
-  id          String   @id @default(cuid())
-  cameraId    String
-  camera      Camera   @relation(fields: [cameraId], references: [id])
-  siteId      String
-  site        Site     @relation(fields: [siteId], references: [id])
-  type        String
-  typeEn      String
-  severity    String
-  status      String   // active/acknowledged/resolved
-  description String
+  id            String    @id @default(cuid())
+  cameraId      String
+  camera        Camera    @relation(fields: [cameraId], references: [id])
+  siteId        String
+  site          Site      @relation(fields: [siteId], references: [id])
+  type          String
+  typeEn        String
+  severity      String
+  status        String    // active/acknowledged/resolved
+  description   String
   descriptionEn String
-<<<<<<< HEAD
-  confidence  Int
-  authority   String?
-  authorityEn String?
-  autoProcessed Boolean @default(false)
-  incidentId  String?  // ربط بالحادث إذا تحول
-=======
-  confidence  Int      // 0-100
-  authority   String?  // الجهة المختصة المُحالة لها
-  authorityEn String?  // بالإنجليزية
-  autoProcessed Boolean @default(false)  // معالج تلقائياً بالذكاء الاصطناعي
->>>>>>> 31cd72b5a77be501df5bc1ccbf5eaf6070e480e0
-  thumbnail   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  confidence    Int       // 0-100
+  authority     String?   // الجهة المختصة المُحالة لها
+  authorityEn   String?   // بالإنجليزية
+  autoProcessed Boolean   @default(false) // معالج تلقائياً بالذكاء الاصطناعي
+  incidentId    String?   // ربط بالحادث إذا تحول
+  thumbnail     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 // الحوادث (Incidents) — الوحدة المركزية لإدارة البلاغات
 model Incident {
-  id              String   @id @default(cuid())
-  incidentNo      String   @unique // رقم مرجعي مثل INC-2026-0001
-  type            String   // intrusion/crowd/suspicious/loitering/fight/fall/safety/fire/perimeter
-  typeEn          String
-  severity        String   // critical/high/medium/low
-  status          String   @default("detected") // detected/under_review/confirmed/assigned/in_progress/resolved/closed
-  cameraId        String
-  camera          Camera   @relation(fields: [cameraId], references: [id])
-  siteId          String
-  site            Site     @relation(fields: [siteId], references: [id])
-  description     String
-  descriptionEn   String
-  aiConfidence    Int
-  authorityId     String?  // الجهة المُحالة لها
-  authority       Authority? @relation(fields: [authorityId], references: [id])
-  assignedOperator String? // المسؤول المعيّن
-  gpsLat          Float?
-  gpsLng          Float?
-  detectedAt      DateTime @default(now())
-  slaDeadline     DateTime?
-  resolvedAt      DateTime?
-  closedAt        DateTime?
-  autoCreated     Boolean  @default(false)
-  evidence        IncidentEvidence[]
-  auditLogs       AuditLog[]
-  notifications   Notification[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id               String             @id @default(cuid())
+  incidentNo       String             @unique // رقم مرجعي مثل INC-2026-0001
+  type             String             // intrusion/crowd/suspicious/loitering/fight/fall/safety/fire/perimeter
+  typeEn           String
+  severity         String             // critical/high/medium/low
+  status           String             @default("detected") // detected/under_review/confirmed/assigned/in_progress/resolved/closed
+  cameraId         String
+  camera           Camera             @relation(fields: [cameraId], references: [id])
+  siteId           String
+  site             Site               @relation(fields: [siteId], references: [id])
+  description      String
+  descriptionEn    String
+  aiConfidence     Int
+  authorityId      String?            // الجهة المُحالة لها
+  authority        Authority?         @relation(fields: [authorityId], references: [id])
+  assignedOperator String?            // المسؤول المعيّن
+  gpsLat           Float?
+  gpsLng           Float?
+  detectedAt       DateTime           @default(now())
+  slaDeadline      DateTime?
+  resolvedAt       DateTime?
+  closedAt         DateTime?
+  autoCreated      Boolean            @default(false)
+  evidence         IncidentEvidence[]
+  auditLogs        AuditLog[]
+  notifications    Notification[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 
   @@index([status])
   @@index([severity])
@@ -128,81 +116,81 @@ model Incident {
 
 // مستودع الأدلة
 model IncidentEvidence {
-  id          String   @id @default(cuid())
-  incidentId  String
-  incident    Incident @relation(fields: [incidentId], references: [id])
-  type        String   // image / video / snapshot
-  filePath    String
-  fileName    String
-  fileSize    Int
-  fileHash    String   // SHA-256 للتحقق من السلامة
-  capturedAt  DateTime @default(now())
-  accessLogs  String?  // سجل الوصول (JSON)
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  incidentId String
+  incident   Incident @relation(fields: [incidentId], references: [id])
+  type       String   // image / video / snapshot
+  filePath   String
+  fileName   String
+  fileSize   Int
+  fileHash   String   // SHA-256 للتحقق من السلامة
+  capturedAt DateTime @default(now())
+  accessLogs String?  // سجل الوصول (JSON)
+  createdAt  DateTime @default(now())
 
   @@index([incidentId])
 }
 
 // الجهات المختصة (Authority Directory)
 model Authority {
-  id          String   @id @default(cuid())
-  name        String
-  nameEn      String
-  category    String   // internal / external
-  categoryEn  String
-  contactName String?
+  id           String        @id @default(cuid())
+  name         String
+  nameEn       String
+  category     String        // internal / external
+  categoryEn   String
+  contactName  String?
   contactPhone String?
   contactEmail String?
-  webhookUrl  String?  // للتكامل الخارجي
-  sandboxMode Boolean  @default(true) // وضع اختبار
-  active      Boolean  @default(true)
+  webhookUrl   String?       // للتكامل الخارجي
+  sandboxMode  Boolean       @default(true) // وضع اختبار
+  active       Boolean       @default(true)
   routingRules RoutingRule[]
-  incidents   Incident[]
-  createdAt   DateTime @default(now())
+  incidents    Incident[]
+  createdAt    DateTime      @default(now())
 }
 
 // قواعد التوجيه (Routing Rules)
 model RoutingRule {
-  id          String   @id @default(cuid())
-  name        String
-  nameEn      String
-  conditionType  String   // نوع الحالة: incident_type / severity / site_type
+  id            String    @id @default(cuid())
+  name          String
+  nameEn        String
+  conditionType String    // نوع الحالة: incident_type / severity / site_type
   conditionValue String   // القيمة
-  authorityId String
-  authority   Authority @relation(fields: [authorityId], references: [id])
-  priority    Int      @default(0)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  authorityId   String
+  authority     Authority @relation(fields: [authorityId], references: [id])
+  priority      Int       @default(0)
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 // قواعد الأتمتة (Rules Engine — No-Code)
 model AutomationRule {
-  id          String   @id @default(cuid())
-  name        String
-  nameEn      String
-  description String
+  id            String    @id @default(cuid())
+  name          String
+  nameEn        String
+  description   String
   // IF conditions (JSON: [{field, operator, value}])
-  conditions  String
+  conditions    String
   // THEN actions (JSON: [{action, params}])
-  actions     String
-  priority    Int      @default(0)
-  active      Boolean  @default(true)
+  actions       String
+  priority      Int       @default(0)
+  active        Boolean   @default(true)
   lastTriggered DateTime?
-  triggerCount Int     @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  triggerCount  Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 // سجل التدقيق (Audit Log)
 model AuditLog {
-  id          String   @id @default(cuid())
-  incidentId  String?
-  incident    Incident? @relation(fields: [incidentId], references: [id])
-  action      String   // created/status_changed/assigned/evidence_added/authority_routed/...
-  actor       String   // من نفّذ الإجراء
-  details     String   // تفاصيل JSON
-  timestamp   DateTime @default(now())
+  id         String    @id @default(cuid())
+  incidentId String?
+  incident   Incident? @relation(fields: [incidentId], references: [id])
+  action     String    // created/status_changed/assigned/evidence_added/authority_routed/...
+  actor      String    // من نفّذ الإجراء
+  details    String    // تفاصيل JSON
+  timestamp  DateTime  @default(now())
 
   @@index([incidentId])
   @@index([timestamp])
@@ -210,45 +198,45 @@ model AuditLog {
 
 // نماذج الذكاء الاصطناعي
 model AIModel {
-  id          String   @id @default(cuid())
-  name        String
-  nameEn      String
-  task        String   // person_detection/object_detection/fire_detection/...
-  taskEn      String
-  version     String
-  status      String   // deployed/staging/retired
-  threshold   Float    @default(0.6)
-  precision   Float?   // دقة التقييم (إن وُجدت)
-  recall      Float?
-  isExperimental Boolean @default(false)
-  createdAt   DateTime @default(now())
+  id              String   @id @default(cuid())
+  name            String
+  nameEn          String
+  task            String   // person_detection/object_detection/fire_detection/...
+  taskEn          String
+  version         String
+  status          String   // deployed/staging/retired
+  threshold       Float    @default(0.6)
+  precision       Float?   // دقة التقييم (إن وُجدت)
+  recall          Float?
+  isExperimental  Boolean  @default(false)
+  createdAt       DateTime @default(now())
 }
 
 // مقاييس صحة النظام
 model SystemHealthMetric {
-  id          String   @id @default(cuid())
-  metric      String   // camera_online/stream_fps/network_latency/storage/gpu/ai_latency/jobs/api/uptime
-  value       Float
-  unit        String
-  status      String   // ok / warning / critical
-  message     String?
-  recordedAt  DateTime @default(now())
+  id         String   @id @default(cuid())
+  metric     String   // camera_online/stream_fps/network_latency/storage/gpu/ai_latency/jobs/api/uptime
+  value      Float
+  unit       String
+  status     String   // ok / warning / critical
+  message    String?
+  recordedAt DateTime @default(now())
 
   @@index([metric, recordedAt])
 }
 
 // الإشعارات
 model Notification {
-  id          String   @id @default(cuid())
-  incidentId  String?
-  incident    Incident? @relation(fields: [incidentId], references: [id])
-  type        String   // incident_created/assigned/sla_breach/status_change/route
-  title       String
-  message     String
-  channel     String   // in_app / email / sms / push
-  recipient   String
-  read        Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id         String    @id @default(cuid())
+  incidentId String?
+  incident   Incident? @relation(fields: [incidentId], references: [id])
+  type       String    // incident_created/assigned/sla_breach/status_change/route
+  title      String
+  message    String
+  channel    String    // in_app / email / sms / push
+  recipient  String
+  read       Boolean   @default(false)
+  createdAt  DateTime  @default(now())
 
   @@index([read])
   @@index([recipient])
@@ -256,34 +244,34 @@ model Notification {
 
 // خطوط إنتاج الرؤية
 model Pipeline {
-  id          String   @id @default(cuid())
-  name        String
-  nameEn      String
-  description String
+  id            String   @id @default(cuid())
+  name          String
+  nameEn        String
+  description   String
   descriptionEn String
-  stages      String
-  stagesEn    String
-  active      Boolean  @default(true)
-  throughput  Int
-  latency     Int
-  siteCount   Int
-  createdAt   DateTime @default(now())
+  stages        String
+  stagesEn      String
+  active        Boolean  @default(true)
+  throughput    Int
+  latency       Int
+  siteCount     Int
+  createdAt     DateTime @default(now())
 }
 
 // قائمة الوجوه المراقبة (بيانات تنظيمية فقط — لا مطابقة حيوية فعلية)
 model WatchlistPerson {
-  id          String   @id @default(cuid())
-  name        String
-  nameEn      String
-  role        String
-  roleEn      String
-  status      String
-  statusEn    String
-  matchCount  Int      @default(0)
-  lastSeen    DateTime?
-  lastSite    String?
-  lastSiteEn  String?
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String    @id @default(cuid())
+  name       String
+  nameEn     String
+  role       String
+  roleEn     String
+  status     String
+  statusEn     String
+  matchCount Int       @default(0)
+  lastSeen   DateTime?
+  lastSite   String?
+  lastSiteEn String?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
