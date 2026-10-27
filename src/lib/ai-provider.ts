@@ -1,5 +1,5 @@
 /**
- * طبقة تجريد الذكاء الاصطناعي — تدعم Hugging Face Vision Models كبديل مجاني
+ * طبقة تجريد الذكاء الاصطناعي — تستخدم Hugging Face Inference API لتحليل الصور الحقيقية
  */
 
 export interface AIStatus {
@@ -18,9 +18,9 @@ export async function getAIStatus(): Promise<AIStatus> {
   }
 
   return {
-    available: true,
+    available: false,
     provider: 'local-fallback',
-    message: 'Using smart vision analysis fallback mode.',
+    message: 'Hugging Face API key not set.',
   }
 }
 
@@ -37,13 +37,13 @@ export interface ChatMessage {
   content: string
 }
 
-// تحليل الصور باستخدام نموذج رؤية مجاني عبر Hugging Face أو التحليل الذكي المخصص للبنية التحتية
+// تحليل الصورة الحقيقية باستخدام نموذج رؤية حقيقي عبر Hugging Face
 export async function analyzeImage(
   messages: VisionMessage[],
   options: { thinking?: { type: string } } = {}
 ): Promise<string> {
   let base64Image = ""
-  let promptText = "Analyze this road and infrastructure image."
+  let promptText = "Analyze this image for infrastructure, road conditions, and traffic."
 
   for (const msg of messages) {
     if (typeof msg.content === 'string') {
@@ -65,83 +65,52 @@ export async function analyzeImage(
     }
   }
 
-  // إذا توفر مفتاح Hugging Face، يمكن استخدامه، وإلا سنقوم بتشغيل التحليل الذكي المخصص لصور الطرق والأسفلت
   const hfToken = process.env.HUGGINGFACE_API_KEY || process.env.HF_TOKEN;
-  
-  if (hfToken && base64Image) {
-    try {
-      const response = await fetch(
-        "https://api-inference.huggingface.co/models/nlpconnect/vit-gpt2-image-captioning",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${hfToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            inputs: base64Image,
-          }),
-        }
-      );
-      if (response.ok) {
-        const result = await response.json();
-        const caption = result[0]?.generated_text || "Road surface image captured.";
-        return JSON.stringify({
-          overallConfidence: 91,
-          peopleCount: 0,
-          riskLevel: "low",
-          urgency: "routine",
-          detectedObjects: [{ label: "road_surface", count: 1, confidence: 95 }],
-          behaviors: [{ type: "infrastructure_check", confidence: 90, description: caption }],
-          summary: `تحليل الصورة: ${caption}. الحالة العامة للطريق مستقرة ولا توجد عوائق حرجة.`,
-          recommendations: ["متابعة حالة الأسفلت دورياً", "تنظيف العلامات الأرضية عند الحاجة"],
-          compliance: { pdplRelevant: false, notes: "لا توجد بيانات شخصية مكشوفة" }
-        });
-      }
-    } catch (e) {
-      console.error("HF API error:", e);
-    }
+
+  if (!hfToken) {
+    throw new Error("HUGGINGFACE_API_KEY is missing in environment variables.");
   }
 
-  // نظام تحليل ذكي دقيق مخصص لصور الطرق والتشققات (بديل مجاني يقرأ الصورة بشكل واقعي)
-  return JSON.stringify({
-    overallConfidence: 94,
-    peopleCount: 0,
-    riskLevel: "medium",
-    urgency: "priority",
-    detectedObjects: [
-      { label: "road_surface_cracks", count: 2, confidence: 92 },
-      { label: "lane_markings", count: 1, confidence: 88 }
-    ],
-    behaviors: [
-      { type: "surface_degradation", confidence: 90, description: "تم رصد تشققات وتصدعات سطحية في طبقة الأسفلت تستوجب المعالجة." }
-    ],
-    emotions: [],
-    summary: "رصد عيوب سطحية وتشققات في طبقة الأسفلت مع علامات تخطيط أرضي تتطلب صيانة وقائية.",
-    recommendations: [
-      "جدولة أعمال صيانة وسفلتة للقطاع المتضرر",
-      "إرسال فريق الصيانة الوقائية لمعاينة الموقع ميدانياً"
-    ],
-    compliance: {
-      pdplRelevant: false,
-      notes: "متوافق تماماً مع معايير حماية البيانات ولا يحتوي على أشخاص."
+  // استخدام نموذج Qwen2-VL أو نموذج قوي لتحليل الصور عبر Hugging Face Serverless Inference
+  const response = await fetch(
+    "https://api-inference.huggingface.co/models/Qwen/Qwen2-VL-7B-Instruct",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${hfToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        inputs: `[img]${base64Image}[/img] ${promptText}`,
+        parameters: { max_new_tokens: 500 }
+      }),
     }
-  });
+  );
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Hugging Face API error ${response.status}: ${errText}`);
+  }
+
+  const result = await response.json();
+  const outputText = Array.isArray(result) ? result[0]?.generated_text : (result?.generated_text || JSON.stringify(result));
+
+  return outputText || "No response generated from vision model.";
 }
 
 export async function chatCompletion(
   messages: ChatMessage[],
   options: { thinking?: { type: string } } = {}
 ): Promise<string> {
-  return "مرحباً بك في منصة نظرة للبنية التحتية. كيف يمكنني مساعدتك اليوم؟";
+  return "أهلاً بك في منصة نظرة.";
 }
 
 export function localFallbackAnalysis(cameraZone: string, cameraModel: string) {
   return {
     hasViolation: false,
     violations: [],
-    vehicleCount: 2,
-    summary: "حالة الطريق مستقرة ولا توجد مخالفات حرجة.",
+    vehicleCount: 0,
+    summary: "جاري الاتصال بنموذج الرؤية...",
     riskLevel: 'low',
     _fallback: false,
   }
