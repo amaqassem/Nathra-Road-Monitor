@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // تهيئة عميل جوجل جنرال إيه آي الرسمي
+    // تهيئة عميل جوجل الرسمي
     const ai = new GoogleGenAI({ apiKey });
 
     // استخراج بيانات الـ Base64 من الصورة
@@ -47,9 +47,9 @@ export async function POST(request: Request) {
       "compliance": {"pdplRelevant": false, "notes": "متوافق مع المعايير"}
     }`;
 
-    // استخدام النموذج المعتمد والمتوافق مع مكتبة @google/genai الحديثة
+    // استخدام النموذج المعتمد والصحيح gemini-3.8-flash
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3.8-flash',
       contents: [
         {
           inlineData: {
