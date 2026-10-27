@@ -21,10 +21,8 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // تهيئة عميل جوجل الرسمي
     const ai = new GoogleGenAI({ apiKey });
 
-    // استخراج بيانات الـ Base64 من الصورة
     const matches = image.match(/^data:([^;]+);base64,(.+)$/);
     if (!matches) {
       return NextResponse.json({ success: false, error: "Invalid image format" }, { status: 400 });
@@ -47,21 +45,39 @@ export async function POST(request: Request) {
       "compliance": {"pdplRelevant": false, "notes": "متوافق مع المعايير"}
     }`;
 
-    // استخدام النموذج المعتمد والصحيح gemini-3.8-flash
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: [
-        {
-          inlineData: {
-            data: base64Data,
-            mimeType: mimeType
-          }
-        },
-        prompt
-      ]
-    });
-
-    const textResponse = response.text || "";
+    let textResponse = "";
+    
+    // محاولة الاتصال مع ميزة إعادة المحاولة التلقائية لتجنب خطأ 503
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: [
+          {
+            inlineData: {
+              data: base64Data,
+              mimeType: mimeType
+            }
+          },
+          prompt
+        ]
+      });
+      textResponse = response.text || "";
+    } catch (apiError) {
+      // محاولة بديلة سريعة في حال الضغط العالي
+      const fallbackResponse = await ai.models.generateContent({
+        model: 'gemini-1.5-flash',
+        contents: [
+          {
+            inlineData: {
+              data: base64Data,
+              mimeType: mimeType
+            }
+          },
+          prompt
+        ]
+      });
+      textResponse = fallbackResponse.text || "";
+    }
     
     let analysis;
     try {
