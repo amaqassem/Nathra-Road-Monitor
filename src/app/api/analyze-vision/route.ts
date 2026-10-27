@@ -45,9 +45,9 @@ export async function POST(request: Request) {
       "compliance": {"pdplRelevant": false, "notes": "متوافق مع المعايير"}
     }`;
 
-    // تنفيذ طلب التحليل باستخدام gemini-2.0-flash وهو النموذج الرسمي المدعوم في المكتبة
+    // استخدام النموذج المعتمد والمطلوب رسمياً gemini-3.8-flash
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3.8-flash',
       contents: [
         {
           inlineData: {
