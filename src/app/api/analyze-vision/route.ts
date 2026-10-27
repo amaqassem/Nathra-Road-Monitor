@@ -45,39 +45,21 @@ export async function POST(request: Request) {
       "compliance": {"pdplRelevant": false, "notes": "متوافق مع المعايير"}
     }`;
 
-    let textResponse = "";
-    
-    // محاولة الاتصال مع ميزة إعادة المحاولة التلقائية لتجنب خطأ 503
-    try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents: [
-          {
-            inlineData: {
-              data: base64Data,
-              mimeType: mimeType
-            }
-          },
-          prompt
-        ]
-      });
-      textResponse = response.text || "";
-    } catch (apiError) {
-      // محاولة بديلة سريعة في حال الضغط العالي
-      const fallbackResponse = await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: [
-          {
-            inlineData: {
-              data: base64Data,
-              mimeType: mimeType
-            }
-          },
-          prompt
-        ]
-      });
-      textResponse = fallbackResponse.text || "";
-    }
+    // تنفيذ طلب التحليل باستخدام gemini-2.0-flash وهو النموذج الرسمي المدعوم في المكتبة
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash',
+      contents: [
+        {
+          inlineData: {
+            data: base64Data,
+            mimeType: mimeType
+          }
+        },
+        prompt
+      ]
+    });
+
+    const textResponse = response.text || "";
     
     let analysis;
     try {
