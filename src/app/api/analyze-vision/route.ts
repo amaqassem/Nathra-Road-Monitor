@@ -47,9 +47,9 @@ export async function POST(request: Request) {
       "compliance": {"pdplRelevant": false, "notes": "متوافق مع المعايير"}
     }`;
 
-    // استدعاء نموذج جيميني الفلاش لتحليل الصورة الحقيقية
+    // استخدام النموذج المعتمد والمتوافق مع مكتبة @google/genai الحديثة
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       contents: [
         {
           inlineData: {
